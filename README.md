@@ -1,6 +1,8 @@
 # AI Companion Plugin for Claude Code
 
-A high-quality fork of the Codex plugin that adds aspect-based code reviews, multi-agent council discussions, and auto-installable coding rules for FastAPI, Next.js, Django, and more.
+Use **Codex** or **GitHub Copilot** from inside Claude Code for code reviews, multi-agent council discussions, task delegation, and auto-installable coding rules — with deep support for FastAPI, Next.js, Django, Flutter, and more.
+
+A high-quality fork of [openai/codex-plugin-cc](https://github.com/openai/codex-plugin-cc) with significant enhancements.
 
 ## What's New in This Fork
 
@@ -29,8 +31,10 @@ A high-quality fork of the Codex plugin that adds aspect-based code reviews, mul
 
 ## Requirements
 
-- **ChatGPT subscription (incl. Free) or OpenAI API key** — [pricing](https://developers.openai.com/codex/pricing)
 - **Node.js 18.18 or later**
+- **One or both backends:**
+  - **Codex** (default): ChatGPT subscription (incl. Free) or OpenAI API key — [pricing](https://developers.openai.com/codex/pricing)
+  - **Copilot**: GitHub Copilot CLI — [install guide](https://docs.github.com/copilot/how-tos/copilot-cli)
 
 ## Install
 
@@ -41,8 +45,9 @@ A high-quality fork of the Codex plugin that adds aspect-based code reviews, mul
 /ai:setup
 ```
 
-If Codex is not installed: `/ai:setup` can install it for you (requires npm).
-If not authenticated: run `!codex login`.
+**Codex backend:** If not installed, `/ai:setup` can install it (requires npm). If not authenticated, run `!codex login`.
+
+**Copilot backend:** Run `/ai:setup --provider copilot` to check readiness. If not authenticated, run `!copilot login`. Use `--model copilot:claude-opus-4.5` to select Copilot for individual commands.
 
 ### Install Coding Rules (Optional)
 
@@ -132,7 +137,7 @@ Hand work to Codex through the rescue subagent.
 /ai:rescue --background investigate the regression
 ```
 
-Supports `--model provider:model`, `--effort level`, `--resume`, `--fresh`, `--background`, `--wait`.
+Supports `--model provider:model` (e.g., `codex:gpt-5.4`, `copilot:claude-opus-4.5`), `--effort level`, `--resume`, `--fresh`, `--background`, `--wait`.
 
 ## Job Management
 
@@ -229,9 +234,13 @@ Reviews (`/ai:review`, `/ai:adversarial-review`, `/ai:council`) are **read-only*
 
 Yes. `/ai:result` includes the Codex session ID. Run `codex resume <session-id>` to continue in Codex directly.
 
+### Can I use Copilot instead of Codex?
+
+Yes. The plugin supports both backends. Use `--model copilot:model-name` on any command, or set Copilot as default via `/ai:setup --provider copilot`. Copilot uses task-based review (no native review mode), so all reviews go through prompt templates.
+
 ### What's the difference from the original plugin?
 
-This fork adds aspect-based reviews (28 prompt templates for 3 languages + 5 techstacks), multi-agent council (parallel discussion + debate + synthesis), auto-installable coding rules, and cascade change tracking. The original only supports diff-based reviews with no language or aspect awareness.
+This fork adds aspect-based reviews (28 prompt templates for 3 languages + 5 techstacks), multi-agent council (parallel discussion + debate + synthesis), auto-installable coding rules, cascade change tracking, and dual backend support (Codex + Copilot). The original only supports diff-based reviews with no language or aspect awareness.
 
 ## License
 
