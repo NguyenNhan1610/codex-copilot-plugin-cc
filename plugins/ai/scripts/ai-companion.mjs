@@ -342,13 +342,12 @@ async function executeReviewRun(request, backend) {
   ensureBackendReady(request.cwd, backend);
   ensureGitRepository(request.cwd);
 
-  const target = resolveReviewTarget(request.cwd, {
-    base: request.base,
-    scope: request.scope
-  });
+  const target = request.aspectOverride
+    ? { mode: "full", label: "full codebase", explicit: true }
+    : resolveReviewTarget(request.cwd, { base: request.base, scope: request.scope });
   const focusText = request.focusText?.trim() ?? "";
   const reviewName = request.reviewName ?? "Review";
-  if (reviewName === "Review" && backend.supportsNativeReview) {
+  if (!request.aspectOverride && reviewName === "Review" && backend.supportsNativeReview) {
     const reviewTarget = validateNativeReviewRequest(target, focusText);
     const result = await backend.runReview(request.cwd, {
       target: reviewTarget,
@@ -693,12 +692,11 @@ async function handleReviewCommand(argv, config, backend, resolvedModel = null) 
     ? positionals.slice(1)
     : positionals;
   const focusText = effectivePositionals.join(" ").trim();
-  const target = resolveReviewTarget(cwd, {
-    base: options.base,
-    scope: options.scope
-  });
+  const target = config.aspectOverride
+    ? { mode: "full", label: "full codebase", explicit: true }
+    : resolveReviewTarget(cwd, { base: options.base, scope: options.scope });
 
-  config.validateRequest?.(target, focusText);
+  if (!config.aspectOverride) config.validateRequest?.(target, focusText);
   const metadata = buildReviewJobMetadata(config.reviewName, target, backend);
   const job = createCompanionJob({
     prefix: "review",
