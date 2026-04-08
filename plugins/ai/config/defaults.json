@@ -1,0 +1,15 @@
+{
+  "defaultProvider": "codex",
+  "providers": {
+    "codex": {
+      "defaultModel": null,
+      "aliases": {
+        "spark": "gpt-5.3-codex-spark"
+      }
+    },
+    "copilot": {
+      "defaultModel": null,
+      "aliases": {}
+    }
+  }
+}
