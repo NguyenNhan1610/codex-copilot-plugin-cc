@@ -1,6 +1,6 @@
 ---
-description: Check whether the AI backend CLI is ready and optionally toggle the stop-time review gate
-argument-hint: '[--provider codex|copilot] [--enable-review-gate|--disable-review-gate]'
+description: Check whether the AI backend CLI is ready and optionally toggle the stop-time review gate or install coding rules
+argument-hint: '[--provider codex|copilot] [--enable-review-gate|--disable-review-gate] [--install-rules python|fastapi|django|typescript|nextjs]'
 allowed-tools: Bash(node:*), Bash(npm:*), AskUserQuestion
 ---
 
@@ -19,6 +19,16 @@ If the result says the backend is unavailable and npm is available:
 If the backend is installed but not authenticated:
 - For Codex: preserve the guidance to run `!codex login`.
 - For Copilot: preserve the guidance to run `!copilot login`.
+
+If `--install-rules` is provided:
+- Copies bundled coding rules into the project's `.claude/rules/` directory.
+- Accepts comma-separated specifiers: `python`, `fastapi`, `django`, `typescript`, `nextjs`
+- Techstack specifiers (fastapi, django, nextjs) include the base language rules automatically.
+- Skips files that already exist in the target directory.
+- Examples:
+  - `--install-rules fastapi` — installs FastAPI + Python rules
+  - `--install-rules nextjs` — installs Next.js + TypeScript rules
+  - `--install-rules fastapi,nextjs` — installs both stacks
 
 Output rules:
 - Present the final setup output to the user.

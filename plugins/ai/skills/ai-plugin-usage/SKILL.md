@@ -174,10 +174,18 @@ Includes the Codex session ID when available, so you can resume in Codex directl
 #### `/ai:setup` - Plugin Setup
 
 ```bash
-/ai:setup                          # Check backend readiness
-/ai:setup --enable-review-gate     # Enable the review gate
-/ai:setup --disable-review-gate    # Disable the review gate
+/ai:setup                              # Check backend readiness
+/ai:setup --enable-review-gate         # Enable the review gate
+/ai:setup --disable-review-gate        # Disable the review gate
+/ai:setup --install-rules fastapi      # Install FastAPI + Python coding rules
+/ai:setup --install-rules nextjs       # Install Next.js + TypeScript coding rules
+/ai:setup --install-rules fastapi,nextjs # Install both stacks
+/ai:setup --install-rules python       # Install Python-only rules (no framework)
+/ai:setup --install-rules django       # Install Django + Python rules
+/ai:setup --install-rules typescript   # Install TypeScript-only rules (no framework)
 ```
+
+**Install Rules**: Copies best-practice coding rules into your project's `.claude/rules/` directory. Rules load on-demand when Claude reads matching files — zero context cost for unrelated work. Available stacks: `python`, `fastapi`, `django`, `typescript`, `nextjs`. Techstack specifiers include base language rules automatically.
 
 **Review Gate**: When enabled, a `Stop` hook runs a targeted Codex review on Claude's recent changes before allowing the session to end. If issues are found, the stop is blocked so Claude can address them first. Warning: this can create long-running loops and drain usage limits.
 

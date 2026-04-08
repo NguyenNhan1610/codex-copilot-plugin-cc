@@ -198,9 +198,61 @@ function buildSetupReport(cwd, backend, actionsTaken = []) {
   };
 }
 
+const RULES_TEMPLATE_DIR = path.join(ROOT_DIR, "rules-templates");
+
+const RULES_MAPPING = {
+  python: { dir: "python", files: ["python-security", "python-performance", "python-antipatterns", "python-architecture"] },
+  fastapi: { dir: "python", files: ["fastapi-security", "fastapi-performance", "fastapi-antipatterns", "python-security", "python-performance", "python-antipatterns", "python-architecture"] },
+  django: { dir: "python", files: ["django-security", "django-performance", "python-security", "python-performance", "python-antipatterns", "python-architecture"] },
+  typescript: { dir: "typescript", files: ["typescript-security", "typescript-performance", "typescript-antipatterns", "typescript-architecture"] },
+  nextjs: { dir: "typescript", files: ["nextjs-security", "nextjs-performance", "nextjs-architecture", "nextjs-antipatterns", "typescript-security", "typescript-performance", "typescript-antipatterns", "typescript-architecture"] }
+};
+
+function installRules(cwd, specifiers) {
+  const installed = [];
+  const skipped = [];
+  const targetBase = path.join(cwd, ".claude", "rules");
+
+  for (const spec of specifiers) {
+    const parts = spec.toLowerCase().split(/[:/]/);
+    let language = parts[0];
+    let techstack = parts.length > 1 ? parts[1] : null;
+
+    const key = techstack || language;
+    const mapping = RULES_MAPPING[key];
+    if (!mapping) {
+      skipped.push(`Unknown: "${spec}" (available: ${Object.keys(RULES_MAPPING).join(", ")})`);
+      continue;
+    }
+
+    const targetDir = path.join(targetBase, mapping.dir);
+    fs.mkdirSync(targetDir, { recursive: true });
+
+    for (const fileName of mapping.files) {
+      const srcFile = path.join(RULES_TEMPLATE_DIR, mapping.dir, `${fileName}.md`);
+      const destFile = path.join(targetDir, `${fileName}.md`);
+
+      if (!fs.existsSync(srcFile)) {
+        skipped.push(`Template not found: ${fileName}.md`);
+        continue;
+      }
+
+      if (fs.existsSync(destFile)) {
+        skipped.push(`Already exists: ${mapping.dir}/${fileName}.md`);
+        continue;
+      }
+
+      fs.copyFileSync(srcFile, destFile);
+      installed.push(`${mapping.dir}/${fileName}.md`);
+    }
+  }
+
+  return { installed, skipped };
+}
+
 function handleSetup(argv, backend) {
-  const { options } = parseCommandInput(argv, {
-    valueOptions: ["cwd", "provider"],
+  const { options, positionals } = parseCommandInput(argv, {
+    valueOptions: ["cwd", "provider", "install-rules"],
     booleanOptions: ["json", "enable-review-gate", "disable-review-gate"]
   });
 
@@ -216,6 +268,28 @@ function handleSetup(argv, backend) {
   const cwd = resolveCommandCwd(options);
   const workspaceRoot = resolveCommandWorkspace(options);
   const actionsTaken = [];
+
+  // Handle --install-rules
+  if (options["install-rules"]) {
+    const specifiers = options["install-rules"].split(",").map((s) => s.trim()).filter(Boolean);
+    const result = installRules(cwd, specifiers);
+    if (result.installed.length > 0) {
+      actionsTaken.push(`Installed ${result.installed.length} rules: ${result.installed.join(", ")}`);
+    }
+    if (result.skipped.length > 0) {
+      actionsTaken.push(`Skipped: ${result.skipped.join("; ")}`);
+    }
+    if (result.installed.length === 0 && result.skipped.length === 0) {
+      actionsTaken.push(`No rules matched for "${options["install-rules"]}". Available: ${Object.keys(RULES_MAPPING).join(", ")}`);
+    }
+    outputResult(
+      options.json
+        ? { installRules: result, actionsTaken }
+        : `# Install Rules\n\n${actionsTaken.join("\n")}\n`,
+      options.json
+    );
+    return;
+  }
 
   if (options["enable-review-gate"]) {
     setConfig(workspaceRoot, "stopReviewGate", true);
