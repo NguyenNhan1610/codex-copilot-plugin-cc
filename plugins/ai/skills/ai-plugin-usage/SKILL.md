@@ -1,101 +1,82 @@
 ---
 name: ai-plugin-usage
-description: Guide for using the AI Companion plugin commands in Claude Code. Use this skill whenever the user asks how to use the AI plugin, wants help with /ai:review, /ai:adversarial-review, /ai:council, /ai:rescue, /ai:status, /ai:result, /ai:cancel, or /ai:setup commands, asks about code review workflows, multi-agent council discussions, task delegation to Codex/Copilot, background job management, plugin installation, configuration, or troubleshooting. Also trigger when the user mentions Codex integration, review gates, multi-agent review, council of agents, or wants to understand what the AI plugin can do.
+description: Guide for using the AI Companion plugin commands in Claude Code. Use this skill whenever the user asks how to use the AI plugin, wants help with /ai:review, /ai:adversarial-review, /ai:council, /ai:debug, /ai:mermaid, /ai:rescue, /ai:status, /ai:result, /ai:cancel, or /ai:setup commands, asks about code review workflows, hypothesis debugging, multi-agent discussions, diagram rendering, task delegation to Codex/Copilot, background job management, plugin installation, configuration, or troubleshooting. Also trigger when the user mentions Codex integration, review gates, multi-agent review, council of agents, mermaid diagrams, or wants to understand what the AI plugin can do.
 user-invocable: true
 ---
 
 # AI Companion Plugin Usage Guide
 
-This skill helps you get the most out of the AI Companion plugin for Claude Code. The plugin bridges Claude Code with AI backends (Codex and GitHub Copilot) for code reviews, task delegation, and background job management.
+Use Codex or GitHub Copilot from inside Claude Code for code reviews, multi-agent discussions, hypothesis debugging, diagram rendering, and task delegation.
+
+## When to Use Which Command
+
+| Situation | Command |
+|-----------|---------|
+| Quick review of changes | `/ai:review` |
+| Deep review of security, performance, architecture | `/ai:review python/fastapi:security` |
+| Challenge design decisions | `/ai:adversarial-review` |
+| Multiple perspectives on the codebase | `/ai:council --roles security,performance` |
+| Adversarial red/blue team analysis | `/ai:council --roles attacker,defender,judge` |
+| Investigate a bug systematically | `/ai:debug The API returns 500 on special chars` |
+| Investigate slow performance | `/ai:debug --type performance The page takes 8s` |
+| Investigate a flaky test | `/ai:debug --type flaky Test fails randomly in CI` |
+| Delegate a fix to Codex | `/ai:rescue fix the failing test` |
+| Continue previous Codex work | `/ai:rescue --resume apply the top fix` |
+| Render a diagram | `/ai:mermaid render graph TD; A-->B` |
+| Validate diagram syntax | `/ai:mermaid validate graph TD; A-->B` |
+| Install coding rules | `/ai:setup --install-rules fastapi,nextjs` |
+| Install Mermaid CLI | `/ai:setup --install-mermaid` |
+| Check job progress | `/ai:status` |
+| Get job result | `/ai:result` |
+| Cancel a running job | `/ai:cancel job-id` |
 
 ## Quick Start
 
-### Installation
-
 ```bash
-/plugin marketplace add NguyenNhan1610/codex-copilot-plugin-cc
+/plugin marketplace add NguyenNhan1610/ai-companion
 /plugin install ai@ai-backends
 /reload-plugins
 /ai:setup
-```
-
-If Codex is not installed, `/ai:setup` can install it for you (requires npm). If Codex is installed but not authenticated, run:
-
-```bash
-!codex login
-```
-
-### First Run
-
-```bash
-/ai:review --background
-/ai:status
-/ai:result
+/ai:setup --install-rules fastapi,nextjs   # Optional: install coding rules
+/ai:setup --install-mermaid                 # Optional: install Mermaid CLI
 ```
 
 ## Commands Reference
 
 ### Code Review
 
-#### `/ai:review` - Standard & Aspect-Based Code Review
-
-Runs a read-only AI review on your current work. Supports optional aspect-based focusing for deep, structured analysis with exact code snippets as evidence.
+#### `/ai:review` — Standard & Aspect-Based Review
 
 ```bash
-# Standard review (native when backend supports it)
-/ai:review                              # Review uncommitted changes
+/ai:review                              # Review uncommitted changes (native)
 /ai:review --base main                  # Review branch vs main
-/ai:review --background                 # Run in background
-
-# Aspect-based review (detailed, structured analysis)
-/ai:review security                     # Security-focused (OWASP-style)
+/ai:review security                     # Full codebase security audit
 /ai:review python:performance           # Python performance review
-/ai:review python/fastapi:security      # FastAPI-specific security review
-/ai:review typescript/nextjs:performance # Next.js App Router performance review
-/ai:review dart/flutter:architecture    # Flutter architecture review
-/ai:review --base main python:antipatterns # Branch diff with aspect
+/ai:review python/fastapi:security      # FastAPI-specific security
+/ai:review typescript/nextjs:performance # Next.js performance
+/ai:review dart/flutter:architecture    # Flutter architecture
+/ai:review --background security        # Run in background
 ```
 
-Available aspects:
-- `security` — injection, auth, data exposure, OWASP Top 10
-- `performance` — hotspots, complexity, memory, I/O patterns
-- `architecture` — coupling, cohesion, SOLID, separation of concerns
-- `antipatterns` — language-specific bad patterns and code smells
+Aspects: `security`, `performance`, `architecture`, `antipatterns`
+Languages: `python`, `typescript`, `dart`
+Techstacks: `fastapi`, `django`, `nextjs`, `flutter`
 
-Supported languages: `python`, `typescript`, `dart`
+Read-only. Aspect reviews analyze the full codebase. No-aspect reviews use native diff-based review.
 
-Supported techstacks:
-- Python: `fastapi`, `django`
-- TypeScript: `nextjs`
-- Dart: `flutter`
-
-Language prefix is optional. When provided, the review applies language/framework-specific patterns. When a techstack is specified (e.g., `python/fastapi:security`), a dedicated template with framework-specific checks is used.
-
-- Read-only: never modifies code
-- For custom focus text or adversarial framing, use `/ai:adversarial-review`
-
-#### `/ai:adversarial-review` - Challenge Review
-
-Runs a steerable review that questions implementation choices and design tradeoffs. Pressure-tests assumptions, failure modes, and alternative approaches.
+#### `/ai:adversarial-review` — Challenge Review
 
 ```bash
 /ai:adversarial-review
-/ai:adversarial-review --base main challenge whether this caching design is right
+/ai:adversarial-review --base main challenge the caching design
 /ai:adversarial-review --background look for race conditions
 ```
 
-Use this when you want to:
-- Challenge the direction, not just the code details
-- Focus on design choices, tradeoffs, and hidden assumptions
-- Pressure-test around specific risk areas (auth, data loss, rollback, race conditions)
-
-Also read-only: does not fix code.
+Read-only. Steerable — accepts free-form focus text.
 
 ### Hypothesis Debugging
 
-#### `/ai:debug` - Structured Debugging
-
-Investigate bugs, performance issues, flaky tests, and unexpected behavior using the scientific method. Generates hypotheses, tests them, and renders a visual decision tree.
+#### `/ai:debug` — Scientific Method Debugging
 
 ```bash
 /ai:debug The API returns 500 with special characters
@@ -106,177 +87,136 @@ Investigate bugs, performance issues, flaky tests, and unexpected behavior using
 
 Types: `bug` (default), `performance`, `flaky`, `behavior`
 
-Process: Observe (explore codebase) -> Hypothesize (generate ranked theories) -> Test (Codex runs scripts) -> Conclude (Mermaid decision tree + diagnosis report)
+Process:
+1. **Observe** — Claude agents explore codebase (grep, read, git log)
+2. **Hypothesize** — generate 3-5 ranked theories with testable predictions
+3. **Test** — Codex agents write and run test scripts (parallel)
+4. **Conclude** — Mermaid decision tree + structured diagnosis report
+
+Read-only. Does not apply fixes.
 
 ### Multi-Agent Council
 
-#### `/ai:council` - Multi-Agent Discussion
-
-Runs multiple AI agents in parallel, each analyzing the codebase from a different perspective. After independent analysis, agents debate each other's findings. A synthesis agent produces the final verdict.
+#### `/ai:council` — Multi-Agent Discussion
 
 ```bash
-/ai:council --roles security,performance           # Default topic
-/ai:council --roles security,performance,architecture Analyze our auth flow
-/ai:council --roles attacker,defender,judge Is our API rate limiting sufficient?
-/ai:council --roles security,antipatterns --background
+/ai:council --roles security,performance Analyze the auth flow
+/ai:council --roles attacker,defender,judge Is our rate limiting sufficient?
+/ai:council --roles architecture,antipatterns --background
 ```
 
-Discussion model (Parallel -> Debate -> Synthesis):
-1. **Round 1**: All agents explore the codebase independently in parallel
-2. **Round 2**: Each agent sees all Round 1 findings, challenges/agrees/adds
-3. **Synthesis**: A judge agent resolves disagreements and produces the final verdict
+Roles: `security`, `performance`, `architecture`, `antipatterns`, `attacker`, `defender`, `judge` (custom freeform also accepted)
 
-Predefined roles: `security`, `performance`, `architecture`, `antipatterns`, `attacker`, `defender`, `judge`
+Process: Round 1 (parallel exploration) -> Round 2 (debate) -> Synthesis (final verdict)
 
-Custom freeform roles are also accepted. Default roles (if `--roles` omitted): security, performance, architecture. Maximum 7 roles.
+Cost: `2*N+1` backend calls (3 roles = 7 calls). Max 7 roles.
 
-Total backend calls: `2 * N + 1` (3 roles = 7 calls).
+### Diagrams
+
+#### `/ai:mermaid` — Mermaid.js Diagrams
+
+```bash
+/ai:mermaid validate graph TD; A-->B; B-->C
+/ai:mermaid render graph TD; A[Start]-->B{Decision}; B-->|Yes|C[End]
+/ai:mermaid render --format png graph TD; A-->B
+/ai:mermaid render -o docs/arch.svg graph TD; A-->B
+```
+
+Inline content — no file needed. Outputs SVG (default) or PNG. Requires mmdc (`/ai:setup --install-mermaid`).
 
 ### Task Delegation
 
-#### `/ai:rescue` - Delegate Work to Codex
-
-Hands a task to Codex through the `ai:rescue` subagent. Write-capable by default.
+#### `/ai:rescue` — Delegate to Codex
 
 ```bash
-/ai:rescue investigate why the tests started failing
+/ai:rescue investigate why the tests are failing
 /ai:rescue fix the failing test with the smallest safe patch
-/ai:rescue --resume apply the top fix from the last run
-/ai:rescue --fresh start a new investigation of the auth bug
+/ai:rescue --resume apply the top fix
 /ai:rescue --model gpt-5.4-mini --effort medium investigate the flaky test
 /ai:rescue --model spark fix the issue quickly
 /ai:rescue --background investigate the regression
 ```
 
-Key flags:
-- `--model provider:model` - Select a specific model (e.g., `codex:gpt-5.4`, `copilot:claude-opus-4.5`)
-- `--effort <level>` - Set reasoning effort: none, minimal, low, medium, high, xhigh
-- `--resume` - Continue the latest rescue thread for this repo
-- `--fresh` - Force a new thread even if a previous one exists
-- `--background` / `--wait` - Control execution mode
+Flags: `--model provider:model`, `--effort level`, `--resume`, `--fresh`, `--background`, `--wait`
 
-Model shortcuts: `spark` maps to `gpt-5.3-codex-spark`.
-
-You can also delegate naturally without the slash command:
-> Ask Codex to redesign the database connection to be more resilient.
+Write-capable by default.
 
 ### Job Management
 
-#### `/ai:status` - Check Job Progress
-
 ```bash
-/ai:status                    # Show all running and recent jobs
-/ai:status task-abc123        # Check a specific job
-/ai:status task-abc123 --wait # Poll until a specific job completes
-```
-
-#### `/ai:result` - Get Job Output
-
-```bash
-/ai:result                    # Show latest finished job output
-/ai:result task-abc123        # Show specific job output
-```
-
-Includes the Codex session ID when available, so you can resume in Codex directly with `codex resume <session-id>`.
-
-#### `/ai:cancel` - Cancel a Job
-
-```bash
-/ai:cancel                    # Cancel the active job
-/ai:cancel task-abc123        # Cancel a specific job
+/ai:status                    # All running and recent jobs
+/ai:status job-id             # Specific job details
+/ai:status job-id --wait      # Poll until completion
+/ai:result                    # Latest finished job output
+/ai:result job-id             # Specific job output
+/ai:cancel job-id             # Cancel active job
 ```
 
 ### Setup & Configuration
 
-#### `/ai:setup` - Plugin Setup
-
 ```bash
 /ai:setup                              # Check backend readiness
-/ai:setup --enable-review-gate         # Enable the review gate
-/ai:setup --disable-review-gate        # Disable the review gate
-/ai:setup --install-rules fastapi      # Install FastAPI + Python coding rules
-/ai:setup --install-rules nextjs       # Install Next.js + TypeScript coding rules
-/ai:setup --install-rules fastapi,nextjs # Install both stacks
-/ai:setup --install-rules python       # Install Python-only rules (no framework)
-/ai:setup --install-rules django       # Install Django + Python rules
-/ai:setup --install-rules typescript   # Install TypeScript-only rules (no framework)
+/ai:setup --install-rules fastapi      # Install FastAPI + Python rules
+/ai:setup --install-rules nextjs       # Install Next.js + TypeScript rules
+/ai:setup --install-rules fastapi,nextjs # Both stacks
+/ai:setup --install-mermaid            # Install Mermaid CLI (mmdc)
+/ai:setup --enable-review-gate         # Enable stop-time review gate
+/ai:setup --disable-review-gate        # Disable review gate
 ```
 
-**Install Rules**: Copies best-practice coding rules into your project's `.claude/rules/` directory. Rules load on-demand when Claude reads matching files — zero context cost for unrelated work. Available stacks: `python`, `fastapi`, `django`, `typescript`, `nextjs`. Techstack specifiers include base language rules automatically.
-
-**Review Gate**: When enabled, a `Stop` hook runs a targeted Codex review on Claude's recent changes before allowing the session to end. If issues are found, the stop is blocked so Claude can address them first. Warning: this can create long-running loops and drain usage limits.
+Available rule stacks: `python`, `fastapi`, `django`, `typescript`, `nextjs`
 
 ## Common Workflows
 
 ### Review Before Shipping
 ```bash
-/ai:review                    # Quick review of uncommitted changes
-# or for branch review:
-/ai:review --base main
+/ai:review security                   # Security audit
+/ai:review --base main                # Diff-based review
 ```
 
-### Get a Second Opinion on Design
+### Deep Multi-Perspective Review
 ```bash
-/ai:adversarial-review --base main challenge whether this was the right approach
+/ai:council --roles security,performance,architecture Analyze the codebase
 ```
 
-### Delegate a Bug Investigation
+### Investigate a Bug
 ```bash
-/ai:rescue investigate why the build is failing in CI
-/ai:status                    # Check progress
-/ai:result                    # Get findings
+/ai:debug The login page shows blank after OAuth redirect
 ```
 
-### Long-Running Background Work
+### Delegate a Fix
 ```bash
-/ai:rescue --background investigate the flaky integration test
-/ai:adversarial-review --background
-# Later:
+/ai:rescue fix the N+1 query in the dashboard endpoint
 /ai:status
 /ai:result
 ```
 
-### Continue Previous Work
+### Generate Architecture Diagram
 ```bash
-/ai:rescue --resume apply the top fix from the last run
-# Or resume directly in Codex:
-codex resume <session-id>
+/ai:mermaid render -o docs/arch.svg graph TD; Client-->API; API-->DB; API-->Cache
 ```
 
-### Use a Specific Model or Effort Level
+### Set Up New Project
 ```bash
-/ai:rescue --model gpt-5.4-mini --effort high fix the type error
-/ai:rescue --model spark quick fix for the typo
+/ai:setup
+/ai:setup --install-rules fastapi,nextjs
+/ai:setup --install-mermaid
 ```
-
-## Configuration
-
-The plugin uses your existing Codex configuration. Customize defaults in `config.toml`:
-
-**User-level**: `~/.codex/config.toml`
-**Project-level**: `.codex/config.toml` (requires trusted project)
-
-Example - always use gpt-5.4-mini with high effort for a project:
-```toml
-model = "gpt-5.4-mini"
-model_reasoning_effort = "xhigh"
-```
-
-Config resolution order: user-level -> project-level overrides -> command-line flags.
 
 ## Supported Backends
 
 | Feature | Codex (Default) | Copilot |
-|---|---|---|
+|---------|-----------------|---------|
 | Type | Persistent app server | Stateless CLI |
 | Native reviews | Yes | No (task-based) |
-| Auth | `~/.codex/config.toml` | GitHub Copilot CLI auth |
-| Models | gpt-5.4, gpt-5.4-mini, gpt-5.3-codex-spark | Via Copilot CLI |
+| Auth | `~/.codex/config.toml` | GitHub Copilot CLI |
+| Models | gpt-5.4, gpt-5.4-mini, spark | Via Copilot CLI |
 
 ## Troubleshooting
 
-- **"Codex not found"**: Run `/ai:setup` to check, or install manually with `npm install -g @openai/codex`
-- **"Not authenticated"**: Run `!codex login` to authenticate
-- **Review takes too long**: Use `--background` and check with `/ai:status`
-- **Want to resume in Codex UI**: Get the session ID from `/ai:result`, then run `codex resume <session-id>`
-- **Review gate draining limits**: Disable with `/ai:setup --disable-review-gate`
+- **"Codex not found"**: `/ai:setup` or `npm install -g @openai/codex`
+- **"Not authenticated"**: `!codex login`
+- **"mmdc not found"**: `/ai:setup --install-mermaid`
+- **Review takes too long**: Use `--background` + `/ai:status`
+- **Resume in Codex**: Get session ID from `/ai:result`, run `codex resume <id>`
+- **Review gate draining limits**: `/ai:setup --disable-review-gate`
