@@ -1,7 +1,6 @@
 ---
 description: Run an AI code review against local git state
 argument-hint: '[--model <provider:model>] [--wait|--background] [--base <ref>] [--scope auto|working-tree|branch]'
-disable-model-invocation: true
 allowed-tools: Read, Glob, Grep, Bash(node:*), Bash(git:*), AskUserQuestion
 ---
 

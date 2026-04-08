@@ -1,7 +1,6 @@
 ---
 description: Run an AI review that challenges the implementation approach and design choices
 argument-hint: '[--model <provider:model>] [--wait|--background] [--base <ref>] [--scope auto|working-tree|branch] [focus ...]'
-disable-model-invocation: true
 allowed-tools: Read, Glob, Grep, Bash(node:*), Bash(git:*), AskUserQuestion
 ---
 
