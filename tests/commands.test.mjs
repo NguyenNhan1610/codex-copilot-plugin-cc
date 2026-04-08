@@ -36,7 +36,7 @@ test("review command uses AskUserQuestion and background Bash while staying revi
   assert.match(source, /Claude Code's `Bash\(..., run_in_background: true\)` is what actually detaches the run/i);
   assert.match(source, /When in doubt, run the review/i);
   assert.match(source, /\(Recommended\)/);
-  assert.match(source, /does not support staged-only review, unstaged-only review, or extra focus text/i);
+  assert.match(source, /accepts an optional aspect specifier as the first positional argument/i);
   assert.match(source, /--model <provider:model>/);
 });
 

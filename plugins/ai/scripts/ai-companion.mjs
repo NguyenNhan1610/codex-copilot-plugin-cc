@@ -18,7 +18,7 @@ registerBackend(createCopilotBackend());
 import { readStdinIfPiped } from "./lib/fs.mjs";
 import { collectReviewContext, ensureGitRepository, resolveReviewTarget } from "./lib/git.mjs";
 import { binaryAvailable, terminateProcessTree } from "./lib/process.mjs";
-import { loadPromptTemplate, interpolateTemplate } from "./lib/prompts.mjs";
+import { loadPromptTemplate, interpolateTemplate, resolveAspectTemplate } from "./lib/prompts.mjs";
 import {
   generateJobId,
   getConfig,
@@ -69,7 +69,7 @@ function printUsage() {
     [
       "Usage:",
       "  node scripts/ai-companion.mjs setup [--provider <codex|copilot>] [--enable-review-gate|--disable-review-gate] [--json]",
-      "  node scripts/ai-companion.mjs review [--model <provider:model>] [--wait|--background] [--base <ref>] [--scope <auto|working-tree|branch>]",
+      "  node scripts/ai-companion.mjs review [--model <provider:model>] [--wait|--background] [--base <ref>] [--scope <auto|working-tree|branch>] [language[/techstack]:aspect]",
       "  node scripts/ai-companion.mjs adversarial-review [--model <provider:model>] [--wait|--background] [--base <ref>] [--scope <auto|working-tree|branch>] [focus text]",
       "  node scripts/ai-companion.mjs task [--model <provider:model>] [--background] [--write] [--resume-last|--resume|--fresh] [--effort <none|minimal|low|medium|high|xhigh>] [prompt]",
       "  node scripts/ai-companion.mjs status [job-id] [--all] [--json]",
@@ -236,6 +236,35 @@ function buildAdversarialReviewPrompt(context, focusText) {
   });
 }
 
+function capitalize(s) {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
+}
+
+const VALID_ASPECTS = new Set(["security", "performance", "architecture", "antipatterns"]);
+
+function parseAspectArg(arg) {
+  if (!arg) return null;
+  const match = arg.match(/^(?:([a-z]+)(?:\/([a-z][\w-]*))?:)?([a-z]+)$/i);
+  if (!match) return null;
+  const [, language, techstack, aspect] = match;
+  if (!VALID_ASPECTS.has(aspect)) return null;
+  return {
+    language: language?.toLowerCase() || null,
+    techstack: techstack?.toLowerCase() || null,
+    aspect
+  };
+}
+
+function buildAspectReviewPrompt(context, { aspect, language, techstack }) {
+  const template = resolveAspectTemplate(ROOT_DIR, { aspect, language, techstack });
+  return interpolateTemplate(template, {
+    TARGET_LABEL: context.target.label,
+    LANGUAGE: language || "any",
+    TECHSTACK: techstack || "any",
+    REVIEW_INPUT: context.content
+  });
+}
+
 function ensureBackendReady(cwd, backend) {
   backend.ensureReady(cwd);
 }
@@ -361,9 +390,14 @@ async function executeReviewRun(request, backend) {
   }
 
   const context = collectReviewContext(request.cwd, target);
-  const prompt = reviewName === "Adversarial Review"
-    ? buildAdversarialReviewPrompt(context, focusText)
-    : buildAdversarialReviewPrompt(context, focusText || "Standard code review: look for bugs, security issues, and quality improvements.");
+  let prompt;
+  if (request.aspectOverride) {
+    prompt = buildAspectReviewPrompt(context, request.aspectOverride);
+  } else if (reviewName === "Adversarial Review") {
+    prompt = buildAdversarialReviewPrompt(context, focusText);
+  } else {
+    prompt = buildAdversarialReviewPrompt(context, focusText || "Standard code review: look for bugs, security issues, and quality improvements.");
+  }
   const result = await backend.runTurn(context.repoRoot, {
     prompt,
     model: request.model,
@@ -488,9 +522,11 @@ async function executeTaskRun(request, backend) {
 
 function buildReviewJobMetadata(reviewName, target, backend = null) {
   const displayName = backend?.displayName ?? "AI";
+  const isAdversarial = reviewName === "Adversarial Review";
+  const isStandardReview = reviewName === "Review";
   return {
-    kind: reviewName === "Adversarial Review" ? "adversarial-review" : "review",
-    title: reviewName === "Review" ? `${displayName} Review` : `${displayName} ${reviewName}`,
+    kind: isAdversarial ? "adversarial-review" : isStandardReview ? "review" : "aspect-review",
+    title: isStandardReview ? `${displayName} Review` : `${displayName} ${reviewName}`,
     summary: `${reviewName} ${target.label}`
   };
 }
@@ -651,7 +687,10 @@ async function handleReviewCommand(argv, config, backend, resolvedModel = null) 
 
   const cwd = resolveCommandCwd(options);
   const workspaceRoot = resolveCommandWorkspace(options);
-  const focusText = positionals.join(" ").trim();
+  const effectivePositionals = config.aspectOverride
+    ? positionals.slice(1)
+    : positionals;
+  const focusText = effectivePositionals.join(" ").trim();
   const target = resolveReviewTarget(cwd, {
     base: options.base,
     scope: options.scope
@@ -677,6 +716,7 @@ async function handleReviewCommand(argv, config, backend, resolvedModel = null) 
         model: resolvedModel,
         focusText,
         reviewName: config.reviewName,
+        aspectOverride: config.aspectOverride ?? null,
         onProgress: progress
       }, backend),
     { json: options.json }
@@ -684,9 +724,29 @@ async function handleReviewCommand(argv, config, backend, resolvedModel = null) 
 }
 
 async function handleReview(argv, backend, resolvedModel = null) {
+  const { positionals: prePositionals } = parseCommandInput(argv, {
+    valueOptions: ["base", "scope", "cwd", "model"],
+    booleanOptions: ["json", "background", "wait"]
+  });
+
+  const aspectArg = prePositionals[0] ? parseAspectArg(prePositionals[0]) : null;
+
+  if (!aspectArg) {
+    return handleReviewCommand(argv, {
+      reviewName: "Review",
+      validateRequest: backend.supportsNativeReview ? validateNativeReviewRequest : null
+    }, backend, resolvedModel);
+  }
+
+  const aspectLabel = [
+    aspectArg.language ? capitalize(aspectArg.language) : null,
+    aspectArg.techstack ? capitalize(aspectArg.techstack) : null,
+    capitalize(aspectArg.aspect)
+  ].filter(Boolean).join(" ");
+
   return handleReviewCommand(argv, {
-    reviewName: "Review",
-    validateRequest: backend.supportsNativeReview ? validateNativeReviewRequest : null
+    reviewName: `${aspectLabel} Review`,
+    aspectOverride: aspectArg
   }, backend, resolvedModel);
 }
 

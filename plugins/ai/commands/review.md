@@ -1,6 +1,6 @@
 ---
 description: Run an AI code review against local git state
-argument-hint: '[--model <provider:model>] [--wait|--background] [--base <ref>] [--scope auto|working-tree|branch]'
+argument-hint: '[--model <provider:model>] [--wait|--background] [--base <ref>] [--scope auto|working-tree|branch] [language[/techstack]:aspect]'
 allowed-tools: Read, Glob, Grep, Bash(node:*), Bash(git:*), AskUserQuestion
 ---
 
@@ -36,8 +36,14 @@ Argument handling:
 - Do not strip `--wait` or `--background` yourself.
 - Do not add extra review instructions or rewrite the user's intent.
 - The companion script parses `--wait` and `--background`, but Claude Code's `Bash(..., run_in_background: true)` is what actually detaches the run.
-- `/ai:review` is native-review only. It does not support staged-only review, unstaged-only review, or extra focus text.
-- If the user needs custom review instructions or more adversarial framing, they should use `/ai:adversarial-review`.
+- `/ai:review` accepts an optional aspect specifier as the first positional argument.
+- Valid aspects: `security`, `performance`, `architecture`, `antipatterns`
+- Aspect format: `aspect` or `language:aspect` or `language/techstack:aspect`
+  - Examples: `security`, `python:performance`, `python/fastapi:security`, `typescript/nextjs:architecture`
+- When an aspect is provided, the review uses a dedicated prompt template for that aspect.
+- When no aspect is provided, behave as before (native review when backend supports it).
+- Aspect-based review does not accept additional free-form focus text.
+- For custom review instructions or adversarial framing, use `/ai:adversarial-review`.
 
 Foreground flow:
 - Run:

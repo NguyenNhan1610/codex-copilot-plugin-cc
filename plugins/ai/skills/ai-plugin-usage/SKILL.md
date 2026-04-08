@@ -37,20 +37,42 @@ If Codex is not installed, `/ai:setup` can install it for you (requires npm). If
 
 ### Code Review
 
-#### `/ai:review` - Standard Code Review
+#### `/ai:review` - Standard & Aspect-Based Code Review
 
-Runs a read-only AI review on your current work. When the resolved backend is Codex, this uses the native `/review` flow; other backends (e.g., Copilot) use a generic task-based review path.
+Runs a read-only AI review on your current work. Supports optional aspect-based focusing for deep, structured analysis with exact code snippets as evidence.
 
 ```bash
-/ai:review                    # Review uncommitted changes
-/ai:review --base main        # Review branch vs main
-/ai:review --background       # Run in background (recommended for multi-file changes)
-/ai:review --wait             # Force foreground execution
+# Standard review (native when backend supports it)
+/ai:review                              # Review uncommitted changes
+/ai:review --base main                  # Review branch vs main
+/ai:review --background                 # Run in background
+
+# Aspect-based review (detailed, structured analysis)
+/ai:review security                     # Security-focused (OWASP-style)
+/ai:review python:performance           # Python performance review
+/ai:review python/fastapi:security      # FastAPI-specific security review
+/ai:review typescript/nextjs:performance # Next.js App Router performance review
+/ai:review dart/flutter:architecture    # Flutter architecture review
+/ai:review --base main python:antipatterns # Branch diff with aspect
 ```
 
+Available aspects:
+- `security` — injection, auth, data exposure, OWASP Top 10
+- `performance` — hotspots, complexity, memory, I/O patterns
+- `architecture` — coupling, cohesion, SOLID, separation of concerns
+- `antipatterns` — language-specific bad patterns and code smells
+
+Supported languages: `python`, `typescript`, `dart`
+
+Supported techstacks:
+- Python: `fastapi`, `django`
+- TypeScript: `nextjs`
+- Dart: `flutter`
+
+Language prefix is optional. When provided, the review applies language/framework-specific patterns. When a techstack is specified (e.g., `python/fastapi:security`), a dedicated template with framework-specific checks is used.
+
 - Read-only: never modifies code
-- Not steerable: does not accept custom focus text
-- For custom focus or challenge-style reviews, use `/ai:adversarial-review`
+- For custom focus text or adversarial framing, use `/ai:adversarial-review`
 
 #### `/ai:adversarial-review` - Challenge Review
 
