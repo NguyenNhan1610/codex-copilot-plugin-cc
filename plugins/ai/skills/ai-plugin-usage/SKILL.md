@@ -91,6 +91,23 @@ Use this when you want to:
 
 Also read-only: does not fix code.
 
+### Hypothesis Debugging
+
+#### `/ai:debug` - Structured Debugging
+
+Investigate bugs, performance issues, flaky tests, and unexpected behavior using the scientific method. Generates hypotheses, tests them, and renders a visual decision tree.
+
+```bash
+/ai:debug The API returns 500 with special characters
+/ai:debug --type performance The dashboard takes 8s to load
+/ai:debug --type flaky The registration test fails randomly in CI
+/ai:debug --type behavior Users see stale data after profile update
+```
+
+Types: `bug` (default), `performance`, `flaky`, `behavior`
+
+Process: Observe (explore codebase) -> Hypothesize (generate ranked theories) -> Test (Codex runs scripts) -> Conclude (Mermaid decision tree + diagnosis report)
+
 ### Multi-Agent Council
 
 #### `/ai:council` - Multi-Agent Discussion

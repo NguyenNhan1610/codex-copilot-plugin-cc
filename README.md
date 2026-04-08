@@ -27,6 +27,7 @@ A high-quality fork of [openai/codex-plugin-cc](https://github.com/openai/codex-
 | `/ai:status` | Check job progress |
 | `/ai:result` | Get finished job output |
 | `/ai:cancel` | Cancel a running job |
+| `/ai:debug` | Hypothesis-based debugging with Mermaid decision trees |
 | `/ai:mermaid` | Validate and render Mermaid.js diagrams |
 | `/ai:setup` | Check backend readiness, install rules, install Mermaid, configure review gate |
 
