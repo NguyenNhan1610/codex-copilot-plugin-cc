@@ -22,6 +22,7 @@ Use Codex or GitHub Copilot from inside Claude Code for code reviews, multi-agen
 | Investigate a flaky test | `/ai:debug --type flaky Test fails randomly in CI` |
 | Delegate a fix to Codex | `/ai:rescue fix the failing test` |
 | Continue previous Codex work | `/ai:rescue --resume apply the top fix` |
+| Document an architecture decision | `/ai:adr Should we use Redis or Memcached?` |
 | Render a diagram | `/ai:mermaid render graph TD; A-->B` |
 | Validate diagram syntax | `/ai:mermaid validate graph TD; A-->B` |
 | Install coding rules | `/ai:setup --install-rules fastapi,nextjs` |
@@ -123,6 +124,24 @@ Cost: `2*N+1` backend calls (3 roles = 7 calls). Max 7 roles.
 ```
 
 Inline content — no file needed. Outputs SVG (default) or PNG. Requires mmdc (`/ai:setup --install-mermaid`).
+
+### Architecture Decision Records
+
+#### `/ai:adr` — Architecture Decision Record
+
+Generate a comprehensive ADR with Mermaid diagrams grounded in your codebase.
+
+```bash
+/ai:adr Should we use Redis or Memcached for caching?
+/ai:adr --scope api REST vs GraphQL for the mobile API
+/ai:adr --scope data Normalize orders table or use JSONB?
+/ai:adr --scope system Microservices vs monolith
+/ai:adr --scope infra ECS vs Kubernetes
+```
+
+Scopes: `module` (default), `system`, `api`, `data`, `infra`
+
+Outputs: Context, decision drivers, 2-3 options with trade-offs, comparison table, 3 Mermaid diagrams (current/proposed/comparison) with raw source, implementation plan.
 
 ### Task Delegation
 
