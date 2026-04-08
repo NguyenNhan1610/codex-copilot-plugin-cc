@@ -14,6 +14,7 @@ When the helper returns AI output:
 - Preserve output sections when the prompt asked for them, such as observed facts, inferences, open questions, touched files, or next steps.
 - If there are no findings, say that explicitly and keep the residual-risk note brief.
 - If the AI made edits, say so explicitly and list the touched files when the helper provides them.
+- For `ai:council`, present each round's per-agent summaries, then the synthesis verdict with disagreements and consolidated findings. Preserve the multi-agent discussion structure.
 - For `ai:rescue`, do not turn a failed or incomplete run into a Claude-side implementation attempt. Report the failure and stop.
 - For `ai:rescue`, if the AI backend was never successfully invoked, do not generate a substitute answer at all.
 - CRITICAL: After presenting review findings, STOP. Do not make any code changes. Do not fix any issues. You MUST explicitly ask the user which issues, if any, they want fixed before touching a single file. Auto-applying fixes from a review is strictly forbidden, even if the fix is obvious.

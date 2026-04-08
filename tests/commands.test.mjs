@@ -112,13 +112,13 @@ test("rescue command absorbs continue semantics", () => {
   assert.match(agent, /prefer foreground for a small, clearly bounded rescue request/i);
   assert.match(agent, /Use exactly one `Bash` call/i);
   assert.match(agent, /Do not inspect the repository, read files, grep, monitor progress, poll status, fetch results, cancel jobs, summarize output, or do any follow-up work of your own/i);
-  assert.match(agent, /Do not call `review`, `adversarial-review`, `status`, `result`, or `cancel`/i);
+  assert.match(agent, /Do not call `review`, `adversarial-review`, `council`, `status`, `result`, or `cancel`/i);
   assert.match(agent, /Leave `--effort` unset unless the user explicitly requests a specific reasoning effort/i);
   assert.match(agent, /Leave model unset by default/i);
   assert.match(agent, /Return the stdout of the `ai-companion` command exactly as-is/i);
   assert.match(agent, /gpt-5-4-prompting/);
   assert.match(runtimeSkill, /only job is to invoke `task` once and return that stdout unchanged/i);
-  assert.match(runtimeSkill, /Do not call `setup`, `review`, `adversarial-review`, `status`, `result`, or `cancel`/i);
+  assert.match(runtimeSkill, /Do not call `setup`, `review`, `adversarial-review`, `council`, `status`, `result`, or `cancel`/i);
   assert.match(runtimeSkill, /That prompt drafting is the only Claude-side work allowed/i);
   assert.match(runtimeSkill, /Leave `--effort` unset unless the user explicitly requests a specific effort/i);
   assert.match(runtimeSkill, /Leave model unset by default/i);

@@ -15,7 +15,7 @@ Primary helper:
 Execution rules:
 - The rescue subagent is a forwarder, not an orchestrator. Its only job is to invoke `task` once and return that stdout unchanged.
 - Prefer the helper over hand-rolled `git`, direct CLI strings, or any other Bash activity.
-- Do not call `setup`, `review`, `adversarial-review`, `status`, `result`, or `cancel` from `ai:rescue`.
+- Do not call `setup`, `review`, `adversarial-review`, `council`, `status`, `result`, or `cancel` from `ai:rescue`.
 - Use `task` for every rescue request, including diagnosis, planning, research, and explicit fix requests.
 - You may use the `gpt-5-4-prompting` skill to rewrite the user's request into a tighter prompt before the single `task` call.
 - That prompt drafting is the only Claude-side work allowed. Do not inspect the repo, solve the task yourself, or add independent analysis outside the forwarded prompt text.

@@ -1,6 +1,6 @@
 ---
 name: ai-plugin-usage
-description: Guide for using the AI Companion plugin commands in Claude Code. Use this skill whenever the user asks how to use the AI plugin, wants help with /ai:review, /ai:adversarial-review, /ai:rescue, /ai:status, /ai:result, /ai:cancel, or /ai:setup commands, asks about code review workflows, task delegation to Codex/Copilot, background job management, plugin installation, configuration, or troubleshooting. Also trigger when the user mentions Codex integration, review gates, or wants to understand what the AI plugin can do.
+description: Guide for using the AI Companion plugin commands in Claude Code. Use this skill whenever the user asks how to use the AI plugin, wants help with /ai:review, /ai:adversarial-review, /ai:council, /ai:rescue, /ai:status, /ai:result, /ai:cancel, or /ai:setup commands, asks about code review workflows, multi-agent council discussions, task delegation to Codex/Copilot, background job management, plugin installation, configuration, or troubleshooting. Also trigger when the user mentions Codex integration, review gates, multi-agent review, council of agents, or wants to understand what the AI plugin can do.
 user-invocable: true
 ---
 
