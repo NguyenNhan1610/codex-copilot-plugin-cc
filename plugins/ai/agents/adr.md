@@ -41,19 +41,24 @@ Optional diagrams (based on scope):
 - Deployment diagram for infra decisions
 - State diagram for lifecycle changes
 
-### Phase 0: NUMBER
-Before anything else, determine the next ADR number:
-1. Use `Glob` to find existing ADR files: `docs/adr/ADR-*.md` and `adr/ADR-*.md` and `ADR-*.md`
-2. Extract the highest number from existing files (e.g., `ADR-05-redis-cache.md` → 5)
-3. Next number = highest + 1 (or 01 if none exist)
-4. Generate a slug from the decision topic: lowercase, hyphens, no special chars (e.g., "redis-vs-memcached")
-5. File name: `ADR-{NN}-{slug}.md` (e.g., `ADR-06-redis-vs-memcached.md`)
-6. Diagram files: `ADR-{NN}-{slug}-current.svg`, `ADR-{NN}-{slug}-proposed.svg`, `ADR-{NN}-{slug}-comparison.svg`
+### Phase 0: INIT & NUMBER
+Before anything else, ensure the project structure exists and determine the next ADR number:
 
-Store ADR files in `docs/adr/` directory (create if needed).
+1. Create project directories if needed:
+   ```bash
+   mkdir -p .claude/project/adr .claude/project/guidelines .claude/project/workflows
+   ```
+2. Use `Glob` to find existing ADR files: `.claude/project/adr/ADR-*.md`
+3. Extract the highest number from existing files (e.g., `ADR-05-redis-cache.md` → 5)
+4. Next number = highest + 1 (or 01 if none exist)
+5. Generate a slug from the decision topic: lowercase, hyphens, no special chars (e.g., "redis-vs-memcached")
+6. File name: `ADR-{NN}-{slug}.md` (e.g., `ADR-06-redis-vs-memcached.md`)
+7. Diagram files stored alongside: `ADR-{NN}-{slug}-current.svg`, `ADR-{NN}-{slug}-proposed.svg`, `ADR-{NN}-{slug}-comparison.svg`
+
+Store ADR files in `.claude/project/adr/` directory.
 
 ### Phase 4: WRITE
-Produce the ADR following the template below exactly. Save it as `docs/adr/ADR-{NN}-{slug}.md`.
+Produce the ADR following the template below exactly. Save it as `.claude/project/adr/ADR-{NN}-{slug}.md`.
 
 ## ADR Template
 
