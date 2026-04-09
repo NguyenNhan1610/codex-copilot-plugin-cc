@@ -153,7 +153,7 @@ export function TemplateToolbar({ currentDir, onInsert }: TemplateToolbarProps) 
         onClick={() => setOpen(!open)}
         style={{
           padding: "3px 10px",
-          background: "var(--bg-tertiary)",
+          background: "var(--bg-elevated)",
           color: "var(--text-secondary)",
           border: "1px solid var(--border)",
           borderRadius: "var(--radius)",
@@ -170,7 +170,7 @@ export function TemplateToolbar({ currentDir, onInsert }: TemplateToolbarProps) 
             top: "100%",
             left: 0,
             marginTop: 4,
-            background: "var(--bg-secondary)",
+            background: "var(--bg-panel)",
             border: "1px solid var(--border)",
             borderRadius: "var(--radius)",
             zIndex: 100,
@@ -196,7 +196,7 @@ export function TemplateToolbar({ currentDir, onInsert }: TemplateToolbarProps) 
                 fontSize: 11,
                 textAlign: "left",
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-tertiary)"; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-elevated)"; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
             >
               {tmpl.label}

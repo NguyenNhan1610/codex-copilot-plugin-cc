@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { Folder, FolderOpen, FileText, FileCode, Image, File } from "lucide-react";
 
 interface FileEntry {
   name: string;
@@ -9,17 +10,16 @@ interface FileEntry {
   children?: FileEntry[];
 }
 
-const ICON_MAP: Record<string, string> = {
-  ".md": "\u{1F4DD}",
-  ".yaml": "\u{1F4CA}",
-  ".yml": "\u{1F4CA}",
-  ".svg": "\u{1F5BC}",
-  ".json": "\u{1F4CB}",
-};
-
-function getFileIcon(name: string): string {
+function getFileIcon(name: string, size = 13) {
   const ext = name.substring(name.lastIndexOf("."));
-  return ICON_MAP[ext] || "\u{1F4C4}";
+  switch (ext) {
+    case ".md": return <FileText size={size} style={{ color: "var(--text-muted)", flexShrink: 0 }} />;
+    case ".yaml":
+    case ".yml": return <FileCode size={size} style={{ color: "var(--accent-orange)", flexShrink: 0 }} />;
+    case ".svg":
+    case ".png": return <Image size={size} style={{ color: "var(--accent-purple)", flexShrink: 0 }} />;
+    default: return <File size={size} style={{ color: "var(--text-muted)", flexShrink: 0 }} />;
+  }
 }
 
 interface FileTreeProps {
@@ -44,6 +44,23 @@ export function FileTree({ onFileSelect, activeFile }: FileTreeProps) {
     return () => clearInterval(interval);
   }, [fetchTree]);
 
+  // Auto-expand parent when active file changes
+  useEffect(() => {
+    if (!activeFile) return;
+    const parts = activeFile.split("/");
+    if (parts.length > 1) {
+      setCollapsed((prev) => {
+        const next = new Set(prev);
+        let path = "";
+        for (let i = 0; i < parts.length - 1; i++) {
+          path = path ? `${path}/${parts[i]}` : parts[i];
+          next.delete(path);
+        }
+        return next;
+      });
+    }
+  }, [activeFile]);
+
   const toggleDir = (path: string) => {
     setCollapsed((prev) => {
       const next = new Set(prev);
@@ -65,29 +82,39 @@ export function FileTree({ onFileSelect, activeFile }: FileTreeProps) {
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 6,
+            gap: 5,
             width: "100%",
             padding: "3px 8px",
-            paddingLeft: 8 + depth * 16,
-            background: isActive ? "var(--bg-tertiary)" : "transparent",
+            paddingLeft: 8 + depth * 12,
+            background: isActive ? "var(--bg-elevated)" : "transparent",
             border: "none",
             borderLeft: isActive ? "2px solid var(--accent-blue)" : "2px solid transparent",
-            color: "var(--text-primary)",
+            color: isActive ? "var(--text-primary)" : "var(--text-secondary)",
             cursor: "pointer",
-            fontSize: 12,
+            fontSize: "var(--text-sm)",
             textAlign: "left",
             borderRadius: 0,
+            transition: "background 150ms ease",
           }}
-          onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = "var(--bg-tertiary)"; }}
+          onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = "var(--bg-elevated)"; }}
           onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
         >
-          {isDir && (
-            <span style={{ fontSize: 10, width: 12, textAlign: "center", color: "var(--text-muted)" }}>
-              {isCollapsed ? "\u25B6" : "\u25BC"}
-            </span>
+          {isDir ? (
+            <>
+              <span style={{ fontSize: "var(--text-xs)", width: 10, textAlign: "center", color: "var(--text-muted)" }}>
+                {isCollapsed ? "\u25B6" : "\u25BC"}
+              </span>
+              {isCollapsed
+                ? <Folder size={13} style={{ color: "var(--text-muted)", flexShrink: 0 }} />
+                : <FolderOpen size={13} style={{ color: "var(--accent-blue)", flexShrink: 0 }} />
+              }
+            </>
+          ) : (
+            <>
+              <span style={{ width: 10 }} />
+              {getFileIcon(entry.name)}
+            </>
           )}
-          {!isDir && <span style={{ width: 12 }} />}
-          <span style={{ fontSize: 12 }}>{isDir ? "\u{1F4C1}" : getFileIcon(entry.name)}</span>
           <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {entry.name}
           </span>
@@ -99,11 +126,11 @@ export function FileTree({ onFileSelect, activeFile }: FileTreeProps) {
 
   if (tree.length === 0) {
     return (
-      <div style={{ padding: 12, color: "var(--text-muted)", fontSize: 11, fontStyle: "italic" }}>
-        No project files yet. Run /ai:setup --init
+      <div style={{ padding: 12, color: "var(--text-muted)", fontSize: "var(--text-sm)", fontStyle: "italic" }}>
+        No project files yet
       </div>
     );
   }
 
-  return <div style={{ paddingTop: 4 }}>{tree.map((entry) => renderEntry(entry))}</div>;
+  return <div style={{ paddingTop: 2 }}>{tree.map((entry) => renderEntry(entry))}</div>;
 }

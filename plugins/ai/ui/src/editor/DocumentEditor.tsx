@@ -89,15 +89,64 @@ export function DocumentEditor({ filePath, onClose }: DocumentEditorProps) {
       <div
         style={{
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
           height: "100%",
-          color: "var(--text-muted)",
-          fontStyle: "italic",
-          fontSize: 13,
+          gap: 16,
+          padding: 32,
+          background: "var(--bg-panel)",
         }}
       >
-        Select a file to edit
+        <div style={{ fontSize: "var(--text-xl)", fontWeight: 700, color: "var(--text-primary)" }}>
+          AI Companion Dashboard
+        </div>
+        <div style={{ fontSize: "var(--text-base)", color: "var(--text-muted)", textAlign: "center" }}>
+          Select a file from the sidebar to start editing
+        </div>
+        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+          {["ADR", "FDR", "IMPL"].map((type) => (
+            <button
+              key={type}
+              onClick={async () => {
+                const dir = type === "IMPL" ? "implementation_plans" : type.toLowerCase();
+                const prefix = type === "IMPL" ? "IMPL" : type;
+                const path = `${dir}/${prefix}-XX-new.md`;
+                try {
+                  await fetch(`/api/files/${path}`, { method: "PUT", headers: { "Content-Type": "text/plain" }, body: `# ${prefix}-XX: New ${type}\n\n` });
+                  onClose();
+                } catch { /* ignore */ }
+              }}
+              style={{
+                padding: "6px 14px",
+                background: "var(--bg-elevated)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--radius)",
+                color: "var(--text-secondary)",
+                cursor: "pointer",
+                fontSize: "var(--text-sm)",
+              }}
+            >
+              + New {type}
+            </button>
+          ))}
+        </div>
+        <div
+          style={{
+            marginTop: 16,
+            fontSize: "var(--text-sm)",
+            color: "var(--text-muted)",
+            fontFamily: "var(--font-mono)",
+            display: "flex",
+            flexDirection: "column",
+            gap: 4,
+          }}
+        >
+          <div><kbd style={{ color: "var(--text-secondary)" }}>Ctrl+S</kbd> Save</div>
+          <div><kbd style={{ color: "var(--text-secondary)" }}>Ctrl+B</kbd> Toggle sidebar</div>
+          <div><kbd style={{ color: "var(--text-secondary)" }}>Ctrl+1</kbd> Chat tab</div>
+          <div><kbd style={{ color: "var(--text-secondary)" }}>Ctrl+2</kbd> Terminal tab</div>
+        </div>
       </div>
     );
   }
@@ -114,7 +163,7 @@ export function DocumentEditor({ filePath, onClose }: DocumentEditorProps) {
           display: "flex",
           alignItems: "center",
           gap: 8,
-          background: "var(--bg-secondary)",
+          background: "var(--bg-panel)",
           flexShrink: 0,
           fontSize: 12,
         }}
@@ -135,7 +184,7 @@ export function DocumentEditor({ filePath, onClose }: DocumentEditorProps) {
             disabled={!dirty || readOnly}
             style={{
               padding: "3px 10px",
-              background: dirty ? "var(--accent-blue)" : "var(--bg-tertiary)",
+              background: dirty ? "var(--accent-blue)" : "var(--bg-elevated)",
               color: dirty ? "#fff" : "var(--text-muted)",
               border: "none",
               borderRadius: "var(--radius)",
@@ -149,7 +198,7 @@ export function DocumentEditor({ filePath, onClose }: DocumentEditorProps) {
             onClick={onClose}
             style={{
               padding: "3px 8px",
-              background: "var(--bg-tertiary)",
+              background: "var(--bg-elevated)",
               color: "var(--text-secondary)",
               border: "none",
               borderRadius: "var(--radius)",
@@ -163,7 +212,7 @@ export function DocumentEditor({ filePath, onClose }: DocumentEditorProps) {
       </div>
 
       {/* Editor body */}
-      <div style={{ flex: 1, overflow: "auto", background: "var(--bg-primary)" }}>
+      <div style={{ flex: 1, overflow: "auto", background: "var(--bg-app)" }}>
         {loading ? (
           <div style={{ padding: 24, color: "var(--text-muted)" }}>Loading...</div>
         ) : (

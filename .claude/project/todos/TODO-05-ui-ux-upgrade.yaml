@@ -1,0 +1,566 @@
+# TODO-05: UI/UX Dashboard Upgrade
+# Source: IMPL-02-ui-ux-upgrade.md
+# Goal: Redesign layout to [Sidebar][BlockNote][Chat|Terminal tabs],
+#        replace emojis with Lucide, new color palette, resizable panels
+# Depends on: TODO-01 through TODO-04 (Phase 1-4 complete)
+
+metadata:
+  title: "UI/UX Dashboard Upgrade"
+  source: IMPL-02-ui-ux-upgrade
+  created: 2026-04-09
+  references:
+    impl: IMPL-02-ui-ux-upgrade
+    blockedBy: [TODO-01, TODO-02, TODO-03, TODO-04]
+  tracks:
+    - design
+    - layout
+    - sidebar
+    - tabs
+    - polish
+
+tasks:
+  # ═══════════════════════════════════════════════
+  # Track A: Design Tokens (T01 + T02)
+  # ═══════════════════════════════════════════════
+
+  - id: T01
+    title: Install Lucide React + remove all emojis
+    status: complete
+    priority: P0
+    track: design
+    description: |
+      Replace every emoji across all widget and layout components
+      with Lucide React SVG icons for consistent, professional rendering.
+    references:
+      impl: IMPL-02 T01
+    dependencies: []
+    blocks: [T04, T05, T12]
+    subtasks:
+      - id: T01.1
+        title: Install lucide-react package
+        status: complete
+        description: "npm install lucide-react in plugins/ai/ui/"
+        files:
+          - plugins/ai/ui/package.json
+
+      - id: T01.2
+        title: Replace emojis in UserPrompt widget
+        status: complete
+        description: "🧑 → User icon"
+        files:
+          - plugins/ai/ui/src/feed/widgets/UserPrompt.tsx
+
+      - id: T01.3
+        title: Replace emojis in FileRead + ReadGroup widgets
+        status: complete
+        description: "📄 → File icon"
+        files:
+          - plugins/ai/ui/src/feed/widgets/FileRead.tsx
+          - plugins/ai/ui/src/feed/widgets/ReadGroup.tsx
+
+      - id: T01.4
+        title: Replace emojis in SearchResult + SearchGroup widgets
+        status: complete
+        description: "🔍 → Search icon, 📂 → FolderSearch icon"
+        files:
+          - plugins/ai/ui/src/feed/widgets/SearchResult.tsx
+          - plugins/ai/ui/src/feed/widgets/SearchGroup.tsx
+
+      - id: T01.5
+        title: Replace emojis in AgentStart + AgentResult widgets
+        status: complete
+        description: "⚙️ → Bot icon, ✅ → CheckCircle icon"
+        files:
+          - plugins/ai/ui/src/feed/widgets/AgentStart.tsx
+          - plugins/ai/ui/src/feed/widgets/AgentResult.tsx
+
+      - id: T01.6
+        title: Replace emojis in JobStatus + QuestionWidget
+        status: complete
+        description: "⚡ → Zap icon, ❓ → HelpCircle icon"
+        files:
+          - plugins/ai/ui/src/feed/widgets/JobStatus.tsx
+          - plugins/ai/ui/src/feed/widgets/QuestionWidget.tsx
+
+      - id: T01.7
+        title: Replace emojis in FileTree
+        status: complete
+        description: "📁→Folder/FolderOpen, 📝→FileText, 📊→FileCode, 🖼→Image, 📋→ClipboardList"
+        files:
+          - plugins/ai/ui/src/editor/FileTree.tsx
+
+      - id: T01.8
+        title: Replace emojis in Sidebar theme toggle
+        status: complete
+        description: "☀️→Sun, 🌙→Moon"
+        files:
+          - plugins/ai/ui/src/layout/Sidebar.tsx
+
+  - id: T02
+    title: Update color palette + CSS variables
+    status: complete
+    priority: P0
+    track: design
+    description: |
+      Replace current CSS variables with IMPL-02 design system palette.
+      Rename tokens: bg-primary→bg-app, bg-secondary→bg-sidebar/bg-panel,
+      bg-tertiary→bg-elevated. Add new tokens for resize handles, tabs, inputs.
+    references:
+      impl: IMPL-02 T02
+    dependencies: []
+    blocks: [T03, T04, T06, T12, T13]
+    subtasks:
+      - id: T02.1
+        title: Replace :root CSS variables in index.css
+        status: complete
+        description: |
+          New surface tokens: bg-app, bg-sidebar, bg-panel, bg-card, bg-elevated, bg-input.
+          New border tokens: border-active, resize-handle, resize-hover.
+          New functional tokens: tab-active, tab-inactive, scrollbar, scrollbar-hover.
+          New status tokens: status-connected, status-disconnected, status-connecting.
+        files:
+          - plugins/ai/ui/src/index.css
+
+      - id: T02.2
+        title: Update all component inline styles to new token names
+        status: complete
+        description: |
+          Search-replace across all .tsx files:
+          var(--bg-primary)→var(--bg-app), var(--bg-secondary)→var(--bg-panel),
+          var(--bg-tertiary)→var(--bg-elevated), var(--bg-card)→var(--bg-card) (unchanged).
+        files:
+          - plugins/ai/ui/src/**/*.tsx
+
+      - id: T02.3
+        title: Update typography tokens
+        status: complete
+        description: |
+          Add text scale variables: text-xs, text-sm, text-base, text-md, text-lg, text-xl.
+          Add leading tokens: leading-tight, leading-normal, leading-relaxed.
+          Add Inter font to --font-sans.
+        files:
+          - plugins/ai/ui/src/index.css
+
+  # ═══════════════════════════════════════════════
+  # Track B: Layout + Resize (T03 + T10 + T11)
+  # ═══════════════════════════════════════════════
+
+  - id: T03
+    title: "New layout: 3-column with resize handles"
+    status: complete
+    priority: P0
+    track: layout
+    description: |
+      Rewrite App.tsx with three-column resizable layout:
+      [Sidebar 200px fixed] | [Editor flex] | [Right Panel flex].
+      Resize via CSS + pointer events, no library.
+      State: editorWidth + rightPanelWidth persisted to localStorage.
+      Min widths: sidebar 160px, editor 300px, right panel 280px.
+    references:
+      impl: IMPL-02 T03
+    dependencies: [T02]
+    blocks: [T04, T06, T09, T10, T11]
+    subtasks:
+      - id: T03.1
+        title: Create ResizeHandle component
+        status: complete
+        description: |
+          New src/layout/ResizeHandle.tsx.
+          Props: onResize, direction (horizontal/vertical).
+          mousedown → track delta → callback.
+          4px wide, full height, cursor col-resize.
+        files:
+          - plugins/ai/ui/src/layout/ResizeHandle.tsx
+
+      - id: T03.2
+        title: Rewrite App.tsx with 3-column flex layout
+        status: complete
+        description: |
+          Remove old 2-column layout. New structure:
+          sidebar (fixed) + resize handle + editor (flex %) + resize handle + right panel (flex %).
+          Persist widths to localStorage. Keyboard: Ctrl+B sidebar toggle.
+        files:
+          - plugins/ai/ui/src/App.tsx
+
+      - id: T03.3
+        title: Remove bottom terminal dock from layout
+        status: complete
+        description: "Terminal moves to right panel tab. Remove showTerminal state and bottom div."
+        files:
+          - plugins/ai/ui/src/App.tsx
+
+  - id: T10
+    title: Resize handle polish
+    status: complete
+    priority: P1
+    track: layout
+    description: |
+      Polish resize handles: transparent by default, --resize-hover on hover (150ms fade),
+      --accent-blue when dragging. 12px hit area via padding. Double-click resets to defaults.
+      Snap to 50/50 when within 10px of center.
+    references:
+      impl: IMPL-02 T10
+    dependencies: [T03]
+    blocks: []
+    subtasks:
+      - id: T10.1
+        title: Add hover/active visual states
+        status: complete
+        description: "Transparent→resize-hover (150ms)→accent-blue (active). cursor: col-resize."
+        files:
+          - plugins/ai/ui/src/layout/ResizeHandle.tsx
+
+      - id: T10.2
+        title: Add double-click reset + snap behavior
+        status: complete
+        description: "Double-click: reset to 50/50 default. Snap when within 10px of midpoint."
+        files:
+          - plugins/ai/ui/src/layout/ResizeHandle.tsx
+
+  - id: T11
+    title: Remove bottom bar
+    status: complete
+    priority: P2
+    track: layout
+    description: |
+      Remove the bottom status bar. Functions relocated:
+      sidebar toggle → Ctrl+B only, terminal → tab, event count → Chat tab label,
+      connected status → sidebar header dot.
+    references:
+      impl: IMPL-02 T11
+    dependencies: [T03, T06]
+    blocks: []
+    files:
+      - plugins/ai/ui/src/App.tsx
+
+  # ═══════════════════════════════════════════════
+  # Track C: Sidebar (T04 + T05 + T14)
+  # ═══════════════════════════════════════════════
+
+  - id: T04
+    title: "Sidebar redesign: files only + status dot"
+    status: complete
+    priority: P0
+    track: sidebar
+    description: |
+      Strip Sidebar to minimal: header (title + status dot + theme toggle),
+      section label "PROJECT FILES", file tree. Remove: filter section,
+      stats section, search input, "Show Editor" button.
+    references:
+      impl: IMPL-02 T04
+    dependencies: [T01, T02, T03]
+    blocks: [T05, T14]
+    subtasks:
+      - id: T04.1
+        title: Rewrite Sidebar header
+        status: complete
+        description: |
+          "AI Companion" title + 6px status dot (green/red) + Sun/Moon toggle button.
+          No labels on status. Theme toggle uses Lucide Sun/Moon icons.
+        files:
+          - plugins/ai/ui/src/layout/Sidebar.tsx
+
+      - id: T04.2
+        title: Remove filter section entirely
+        status: complete
+        description: "Delete FilterState type, all toggle buttons, search input, tool sub-filters."
+        files:
+          - plugins/ai/ui/src/layout/Sidebar.tsx
+
+      - id: T04.3
+        title: Remove stats section
+        status: complete
+        description: "Delete event count, session duration, connection status text."
+        files:
+          - plugins/ai/ui/src/layout/Sidebar.tsx
+
+      - id: T04.4
+        title: Add section label + file tree container
+        status: complete
+        description: |
+          "PROJECT FILES" uppercase label (10px, text-muted) above the FileTree component.
+          File tree takes remaining height with overflow scroll.
+        files:
+          - plugins/ai/ui/src/layout/Sidebar.tsx
+
+  - id: T05
+    title: Improved FileTree
+    status: complete
+    priority: P1
+    track: sidebar
+    description: |
+      Lucide icons per file type, 12px indent per level, active file highlight
+      with accent-blue left border, hover transitions (150ms), ellipsis truncation,
+      auto-expand directory when file inside is opened.
+    references:
+      impl: IMPL-02 T05
+    dependencies: [T01, T04]
+    blocks: []
+    subtasks:
+      - id: T05.1
+        title: Replace emoji icons with Lucide file type icons
+        status: complete
+        description: "Folder/FolderOpen for dirs, FileText for .md, FileCode for .yaml, Image for .svg"
+        files:
+          - plugins/ai/ui/src/editor/FileTree.tsx
+
+      - id: T05.2
+        title: Tighten indentation + add hover/active transitions
+        status: complete
+        description: "12px per level. Hover: bg-elevated 150ms. Active: 2px accent-blue left border."
+        files:
+          - plugins/ai/ui/src/editor/FileTree.tsx
+
+      - id: T05.3
+        title: Add auto-expand on file open
+        status: complete
+        description: "When a file is selected, auto-expand its parent directory in the tree."
+        files:
+          - plugins/ai/ui/src/editor/FileTree.tsx
+
+  - id: T14
+    title: Remove filter state from App.tsx
+    status: complete
+    priority: P1
+    track: sidebar
+    description: |
+      Remove FilterState type, filters state, filteredEvents useMemo.
+      Pass raw events to ChatFeed. ChatFeed handles "show reads" toggle internally.
+      Remove filter props from Sidebar.
+    references:
+      impl: IMPL-02 T14
+    dependencies: [T04]
+    blocks: []
+    subtasks:
+      - id: T14.1
+        title: Remove filter state and useMemo from App.tsx
+        status: complete
+        description: "Delete FilterState, filters useState, filteredEvents useMemo. Pass events directly."
+        files:
+          - plugins/ai/ui/src/App.tsx
+
+      - id: T14.2
+        title: Add local reads toggle to ChatFeed
+        status: complete
+        description: "ChatFeed internally manages showReads boolean. Small toggle in feed header."
+        files:
+          - plugins/ai/ui/src/feed/ChatFeed.tsx
+
+  # ═══════════════════════════════════════════════
+  # Track D: Tabbed Panel (T06 + T07 + T08)
+  # ═══════════════════════════════════════════════
+
+  - id: T06
+    title: "Tabbed right panel: Chat + Terminal"
+    status: complete
+    priority: P0
+    track: tabs
+    description: |
+      Create TabbedPanel container with "Chat" and "Terminal" tabs.
+      Active tab: accent-blue 2px underline + text-primary.
+      Inactive: no underline + tab-inactive color.
+      Tab bar: 32px height, border-bottom. Persist active tab in localStorage.
+      Keyboard: Ctrl+1 Chat, Ctrl+2 Terminal.
+    references:
+      impl: IMPL-02 T06
+    dependencies: [T03]
+    blocks: [T07, T08]
+    subtasks:
+      - id: T06.1
+        title: Create TabbedPanel component
+        status: complete
+        description: |
+          New src/layout/TabbedPanel.tsx.
+          Props: tabs array, activeTab, onTabChange, children.
+          Tab bar with underline indicator, 32px height.
+        files:
+          - plugins/ai/ui/src/layout/TabbedPanel.tsx
+
+      - id: T06.2
+        title: Wire TabbedPanel into App.tsx right column
+        status: complete
+        description: |
+          Replace direct ChatFeed/TerminalPanel rendering with TabbedPanel wrapper.
+          State: activeTab persisted to localStorage. Keyboard shortcuts Ctrl+1/2.
+        files:
+          - plugins/ai/ui/src/App.tsx
+
+      - id: T06.3
+        title: Lazy-mount Terminal tab
+        status: complete
+        description: |
+          Terminal only mounts (and connects WebSocket) when tab first activates.
+          Use useState to track if terminal has been activated. Keep alive after first mount.
+        files:
+          - plugins/ai/ui/src/App.tsx
+
+  - id: T07
+    title: Adapt ChatFeed for tab context
+    status: complete
+    priority: P1
+    track: tabs
+    description: |
+      Remove connection status bar from ChatFeed top (moved to sidebar dot).
+      Keep auto-scroll, scroll-to-bottom, event grouping.
+      Add compact event count to parent tab label: "Chat (42)".
+    references:
+      impl: IMPL-02 T07
+    dependencies: [T06]
+    blocks: []
+    subtasks:
+      - id: T07.1
+        title: Remove connection status header bar
+        status: complete
+        description: "Delete the top bar with green/red dot and 'Connected'/'Reconnecting' text."
+        files:
+          - plugins/ai/ui/src/feed/ChatFeed.tsx
+
+      - id: T07.2
+        title: Expose event count for tab label
+        status: complete
+        description: "Add onEventCount callback prop or expose count via ref for parent tab badge."
+        files:
+          - plugins/ai/ui/src/feed/ChatFeed.tsx
+
+  - id: T08
+    title: Adapt TerminalPanel for tab context
+    status: complete
+    priority: P1
+    track: tabs
+    description: |
+      Remove toolbar header from TerminalPanel. Clear/Close move to tab-level.
+      Status dot in tab label: "Terminal ●". FitAddon responds to panel resize.
+      Keep alive when switching away from Terminal tab.
+    references:
+      impl: IMPL-02 T08
+    dependencies: [T06]
+    blocks: []
+    subtasks:
+      - id: T08.1
+        title: Remove toolbar header
+        status: complete
+        description: "Delete the toolbar div with Clear/Close buttons. Terminal fills full height."
+        files:
+          - plugins/ai/ui/src/terminal/TerminalPanel.tsx
+
+      - id: T08.2
+        title: Expose terminal status for tab label
+        status: complete
+        description: "Expose connected/disconnected state via callback for parent to show in tab."
+        files:
+          - plugins/ai/ui/src/terminal/TerminalPanel.tsx
+
+      - id: T08.3
+        title: Add ResizeObserver-based refit
+        status: complete
+        description: "Re-run FitAddon.fit() when parent container resizes (panel drag or tab switch)."
+        files:
+          - plugins/ai/ui/src/terminal/TerminalPanel.tsx
+
+  # ═══════════════════════════════════════════════
+  # Track E: Polish (T09 + T12 + T13)
+  # ═══════════════════════════════════════════════
+
+  - id: T09
+    title: Editor welcome state
+    status: complete
+    priority: P2
+    track: polish
+    description: |
+      When no file is open, editor shows welcome screen with:
+      title, "Select a file" prompt, quick action buttons (New ADR/FDR/IMPL),
+      keyboard shortcuts list.
+    references:
+      impl: IMPL-02 T09
+    dependencies: [T03]
+    blocks: []
+    subtasks:
+      - id: T09.1
+        title: Design welcome screen layout
+        status: complete
+        description: |
+          Centered content: title (20px), subtitle (13px muted), quick action buttons,
+          shortcut list in monospace. All using new color tokens.
+        files:
+          - plugins/ai/ui/src/editor/DocumentEditor.tsx
+
+      - id: T09.2
+        title: Add quick action buttons
+        status: complete
+        description: |
+          "+ New ADR", "+ New FDR", "+ New IMPL" buttons that create templated files
+          via PUT /api/files/ and open them in editor.
+        files:
+          - plugins/ai/ui/src/editor/DocumentEditor.tsx
+
+  - id: T12
+    title: Scrollbar + micro-interaction polish
+    status: complete
+    priority: P2
+    track: polish
+    description: |
+      Scrollbar: 6px wide, --scrollbar thumb, --scrollbar-hover on hover.
+      All interactive elements: transition background 150ms ease.
+      Focus rings: 2px accent-blue :focus-visible only.
+      Selection: accent-blue 30% opacity. Tab underline: animate slide 120ms.
+    references:
+      impl: IMPL-02 T12
+    dependencies: [T01, T02]
+    blocks: []
+    subtasks:
+      - id: T12.1
+        title: Update scrollbar styles
+        status: complete
+        description: "6px width, new color tokens, smooth thumb transitions."
+        files:
+          - plugins/ai/ui/src/index.css
+
+      - id: T12.2
+        title: Add global transition + focus-visible rules
+        status: complete
+        description: |
+          button, a, [role=button] { transition: background 150ms ease; }
+          :focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+          :focus:not(:focus-visible) { outline: none; }
+          ::selection { background: rgba(59,130,246,0.3); }
+        files:
+          - plugins/ai/ui/src/index.css
+
+      - id: T12.3
+        title: Add tab underline slide animation
+        status: complete
+        description: "Animate the 2px underline position on tab switch using CSS transform, 120ms."
+        files:
+          - plugins/ai/ui/src/layout/TabbedPanel.tsx
+
+  - id: T13
+    title: Light theme update
+    status: complete
+    priority: P3
+    track: polish
+    description: |
+      Update [data-theme="light"] CSS tokens to match new palette structure.
+      Base: slate-50/100/200. Same semantic token names.
+      Test both themes independently for contrast compliance.
+    references:
+      impl: IMPL-02 T13
+    dependencies: [T02]
+    blocks: []
+    subtasks:
+      - id: T13.1
+        title: Update light theme CSS variables
+        status: complete
+        description: |
+          bg-app: #FAFBFC, bg-sidebar: #F1F5F9, bg-panel: #FFFFFF,
+          bg-card: #F8FAFC, bg-elevated: #F1F5F9, bg-input: #FFFFFF,
+          border: #E2E8F0, border-active: #CBD5E1,
+          text-primary: #0F172A, text-secondary: #475569, text-muted: #94A3B8.
+          Accents unchanged.
+        files:
+          - plugins/ai/ui/src/index.css
+
+      - id: T13.2
+        title: Verify contrast ratios in light theme
+        status: complete
+        description: "All text ≥ 4.5:1. Secondary text ≥ 3:1. Test both modes before merge."
+        files: []

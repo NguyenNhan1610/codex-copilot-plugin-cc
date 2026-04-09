@@ -61,7 +61,7 @@ export function FrontmatterBlock({ content, onChange, readOnly }: FrontmatterPro
   return (
     <div
       style={{
-        background: "var(--bg-secondary)",
+        background: "var(--bg-panel)",
         border: "1px solid var(--border)",
         borderRadius: "var(--radius)",
         padding: "10px 14px",
@@ -85,7 +85,7 @@ export function FrontmatterBlock({ content, onChange, readOnly }: FrontmatterPro
                 style={{
                   flex: 1,
                   padding: "3px 6px",
-                  background: "var(--bg-primary)",
+                  background: "var(--bg-app)",
                   border: "1px solid var(--border)",
                   borderRadius: "var(--radius)",
                   color: "var(--text-primary)",
@@ -105,7 +105,7 @@ export function FrontmatterBlock({ content, onChange, readOnly }: FrontmatterPro
                 style={{
                   flex: 1,
                   padding: "3px 6px",
-                  background: "var(--bg-primary)",
+                  background: "var(--bg-app)",
                   border: "1px solid var(--border)",
                   borderRadius: "var(--radius)",
                   color: "var(--text-primary)",
@@ -121,7 +121,7 @@ export function FrontmatterBlock({ content, onChange, readOnly }: FrontmatterPro
                 style={{
                   flex: 1,
                   padding: "3px 6px",
-                  background: "var(--bg-primary)",
+                  background: "var(--bg-app)",
                   border: "1px solid var(--border)",
                   borderRadius: "var(--radius)",
                   color: isReadOnlyField(field.key) ? "var(--text-muted)" : "var(--text-primary)",

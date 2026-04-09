@@ -1,39 +1,89 @@
 :root {
-  --bg-primary: #0d1117;
-  --bg-secondary: #161b22;
-  --bg-tertiary: #21262d;
-  --bg-card: #1c2128;
-  --border: #30363d;
-  --text-primary: #e6edf3;
-  --text-secondary: #8b949e;
-  --text-muted: #484f58;
-  --accent-blue: #58a6ff;
-  --accent-green: #3fb950;
-  --accent-orange: #d29922;
-  --accent-red: #f85149;
-  --accent-purple: #bc8cff;
-  --accent-gray: #6e7681;
+  /* Surfaces */
+  --bg-app:       #020617;
+  --bg-sidebar:   #0B1120;
+  --bg-panel:     #0F172A;
+  --bg-card:      #1E293B;
+  --bg-elevated:  #1A2332;
+  --bg-input:     #0F172A;
+
+  /* Borders */
+  --border:        #1E293B;
+  --border-active: #334155;
+  --resize-handle: #334155;
+  --resize-hover:  #475569;
+
+  /* Text */
+  --text-primary:   #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted:     #475569;
+  --text-inverse:   #0F172A;
+
+  /* Accents */
+  --accent-blue:   #3B82F6;
+  --accent-green:  #22C55E;
+  --accent-orange: #F97316;
+  --accent-red:    #EF4444;
+  --accent-purple: #A78BFA;
+  --accent-cyan:   #22D3EE;
+  --accent-gray:   #64748B;
+
+  /* Functional */
+  --tab-active:   #3B82F6;
+  --tab-inactive: #475569;
+  --scrollbar:      #1E293B;
+  --scrollbar-hover: #334155;
+  --status-connected:    #22C55E;
+  --status-disconnected: #EF4444;
+  --status-connecting:   #F97316;
+
+  /* Typography */
   --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", Consolas, monospace;
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --text-xs:   10px;
+  --text-sm:   11px;
+  --text-base: 13px;
+  --text-md:   14px;
+  --text-lg:   16px;
+  --text-xl:   20px;
+  --leading-tight:   1.3;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.6;
+
+  /* Radii */
   --radius: 6px;
   --radius-lg: 10px;
 }
 
 [data-theme="light"] {
-  --bg-primary: #ffffff;
-  --bg-secondary: #f6f8fa;
-  --bg-tertiary: #eaeef2;
-  --bg-card: #f6f8fa;
-  --border: #d0d7de;
-  --text-primary: #1f2328;
-  --text-secondary: #656d76;
-  --text-muted: #8c959f;
-  --accent-blue: #0969da;
-  --accent-green: #1a7f37;
-  --accent-orange: #9a6700;
-  --accent-red: #cf222e;
-  --accent-purple: #8250df;
-  --accent-gray: #6e7781;
+  --bg-app:       #FAFBFC;
+  --bg-sidebar:   #F1F5F9;
+  --bg-panel:     #FFFFFF;
+  --bg-card:      #F8FAFC;
+  --bg-elevated:  #F1F5F9;
+  --bg-input:     #FFFFFF;
+  --border:        #E2E8F0;
+  --border-active: #CBD5E1;
+  --resize-handle: #CBD5E1;
+  --resize-hover:  #94A3B8;
+  --text-primary:   #0F172A;
+  --text-secondary: #475569;
+  --text-muted:     #94A3B8;
+  --text-inverse:   #F8FAFC;
+  --accent-blue:   #2563EB;
+  --accent-green:  #16A34A;
+  --accent-orange: #EA580C;
+  --accent-red:    #DC2626;
+  --accent-purple: #7C3AED;
+  --accent-cyan:   #0891B2;
+  --accent-gray:   #64748B;
+  --tab-active:   #2563EB;
+  --tab-inactive: #94A3B8;
+  --scrollbar:      #E2E8F0;
+  --scrollbar-hover: #CBD5E1;
+  --status-connected:    #16A34A;
+  --status-disconnected: #DC2626;
+  --status-connecting:   #EA580C;
 }
 
 * {
@@ -49,10 +99,10 @@ html, body, #root {
 
 body {
   font-family: var(--font-sans);
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
   color: var(--text-primary);
-  background: var(--bg-primary);
+  background: var(--bg-app);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -61,9 +111,10 @@ code, pre, .mono {
   font-size: 12px;
 }
 
+/* Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -71,12 +122,30 @@ code, pre, .mono {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 4px;
+  background: var(--scrollbar);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: var(--scrollbar-hover);
+}
+
+/* Interactions */
+button, a, [role="button"] {
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+::selection {
+  background: rgba(59, 130, 246, 0.3);
 }
 
 /* Animations */

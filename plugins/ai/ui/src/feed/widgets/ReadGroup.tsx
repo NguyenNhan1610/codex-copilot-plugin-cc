@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Files } from "lucide-react";
 import type { SessionEvent } from "../../hooks/useEventStream";
 
 export function ReadGroup({ events, label }: { events: SessionEvent[]; label: string }) {
@@ -15,7 +16,7 @@ export function ReadGroup({ events, label }: { events: SessionEvent[]; label: st
         border: "1px solid var(--border)",
         borderRadius: "var(--radius)",
         overflow: "hidden",
-        fontSize: 11,
+        fontSize: "var(--text-sm)",
       }}
     >
       <button
@@ -23,7 +24,7 @@ export function ReadGroup({ events, label }: { events: SessionEvent[]; label: st
         style={{
           width: "100%",
           padding: "5px 10px",
-          background: "var(--bg-secondary)",
+          background: "var(--bg-panel)",
           border: "none",
           borderBottom: expanded ? "1px solid var(--border)" : "none",
           display: "flex",
@@ -32,12 +33,12 @@ export function ReadGroup({ events, label }: { events: SessionEvent[]; label: st
           cursor: "pointer",
           color: "var(--text-secondary)",
           fontFamily: "var(--font-mono)",
-          fontSize: 11,
+          fontSize: "var(--text-sm)",
           textAlign: "left",
         }}
       >
-        <span>{expanded ? "\u25BC" : "\u25B6"}</span>
-        <span style={{ color: "var(--text-muted)" }}>{"\u{1F4C4}"}</span>
+        <span style={{ fontSize: "var(--text-xs)" }}>{expanded ? "\u25BC" : "\u25B6"}</span>
+        <Files size={12} style={{ color: "var(--text-muted)" }} />
         <span>{label}</span>
       </button>
       {expanded && (

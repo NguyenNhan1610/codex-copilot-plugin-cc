@@ -1,3 +1,4 @@
+import { Bot } from "lucide-react";
 import type { SessionEvent } from "../../hooks/useEventStream";
 
 export function AgentStart({ event }: { event: SessionEvent }) {
@@ -9,24 +10,20 @@ export function AgentStart({ event }: { event: SessionEvent }) {
   return (
     <div
       style={{
-        border: "1px solid var(--accent-blue)",
-        borderLeft: "3px solid var(--accent-blue)",
+        border: "1px solid var(--accent-cyan)",
+        borderLeft: "3px solid var(--accent-cyan)",
         borderRadius: "var(--radius)",
         padding: "8px 12px",
-        background: "var(--bg-secondary)",
+        background: "var(--bg-panel)",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-        <span className="spinner" style={{ fontSize: 14 }}>&#x2699;&#xFE0F;</span>
-        <span style={{ fontWeight: 600, fontSize: 12, color: "var(--accent-blue)" }}>
-          {description}
-        </span>
-        <span style={{ marginLeft: "auto", fontSize: 10, color: "var(--text-muted)" }}>{ts}</span>
+        <Bot size={14} className="spinner" style={{ color: "var(--accent-cyan)" }} />
+        <span style={{ fontWeight: 600, fontSize: "var(--text-sm)", color: "var(--accent-cyan)" }}>{description}</span>
+        <span style={{ marginLeft: "auto", fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>{ts}</span>
       </div>
       {truncatedPrompt && (
-        <div style={{ fontSize: 11, color: "var(--text-secondary)", fontStyle: "italic" }}>
-          {truncatedPrompt}
-        </div>
+        <div style={{ fontSize: "var(--text-sm)", color: "var(--text-secondary)", fontStyle: "italic" }}>{truncatedPrompt}</div>
       )}
     </div>
   );

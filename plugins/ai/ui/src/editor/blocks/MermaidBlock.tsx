@@ -63,7 +63,7 @@ export function MermaidBlock({ code, onChange, readOnly }: MermaidBlockProps) {
       <div
         style={{
           padding: "4px 10px",
-          background: "var(--bg-secondary)",
+          background: "var(--bg-panel)",
           borderBottom: "1px solid var(--border)",
           display: "flex",
           alignItems: "center",
@@ -78,7 +78,7 @@ export function MermaidBlock({ code, onChange, readOnly }: MermaidBlockProps) {
               onClick={() => setEditing(!editing)}
               style={{
                 padding: "2px 6px",
-                background: "var(--bg-tertiary)",
+                background: "var(--bg-elevated)",
                 border: "none",
                 borderRadius: "var(--radius)",
                 color: "var(--text-secondary)",
@@ -94,7 +94,7 @@ export function MermaidBlock({ code, onChange, readOnly }: MermaidBlockProps) {
               onClick={copySvg}
               style={{
                 padding: "2px 6px",
-                background: "var(--bg-tertiary)",
+                background: "var(--bg-elevated)",
                 border: "none",
                 borderRadius: "var(--radius)",
                 color: "var(--text-secondary)",
@@ -142,7 +142,7 @@ export function MermaidBlock({ code, onChange, readOnly }: MermaidBlockProps) {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            background: "var(--bg-primary)",
+            background: "var(--bg-app)",
             overflow: "auto",
           }}
         >

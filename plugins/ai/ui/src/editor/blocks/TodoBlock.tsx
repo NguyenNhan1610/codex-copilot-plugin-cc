@@ -80,7 +80,7 @@ export function TodoBlock({ content, onChange, readOnly }: TodoBlockProps) {
           style={{
             flex: 1,
             minWidth: 180,
-            background: "var(--bg-secondary)",
+            background: "var(--bg-panel)",
             borderRadius: "var(--radius)",
             padding: 8,
           }}
@@ -104,7 +104,7 @@ export function TodoBlock({ content, onChange, readOnly }: TodoBlockProps) {
                 fontSize: 10,
                 padding: "0 5px",
                 borderRadius: 8,
-                background: "var(--bg-tertiary)",
+                background: "var(--bg-elevated)",
                 color: "var(--text-muted)",
               }}
             >
@@ -163,7 +163,7 @@ export function TodoBlock({ content, onChange, readOnly }: TodoBlockProps) {
                         style={{
                           padding: "2px 6px",
                           fontSize: 9,
-                          background: "var(--bg-tertiary)",
+                          background: "var(--bg-elevated)",
                           border: "1px solid var(--border)",
                           borderRadius: "var(--radius)",
                           color: STATUS_COLORS[s],

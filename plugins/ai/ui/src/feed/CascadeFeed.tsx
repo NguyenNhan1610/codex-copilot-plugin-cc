@@ -151,7 +151,7 @@ export function CascadeFeed({ branch = "main" }: CascadeFeedProps) {
         style={{
           padding: "6px 12px",
           borderBottom: "1px solid var(--border)",
-          background: "var(--bg-secondary)",
+          background: "var(--bg-panel)",
           fontSize: 12,
           color: "var(--text-secondary)",
           flexShrink: 0,

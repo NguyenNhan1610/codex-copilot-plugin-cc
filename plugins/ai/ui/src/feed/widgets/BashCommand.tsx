@@ -30,7 +30,7 @@ export function BashCommand({ event }: { event: SessionEvent }) {
       <div
         style={{
           padding: "6px 10px",
-          background: "var(--bg-tertiary)",
+          background: "var(--bg-elevated)",
           borderBottom: "1px solid var(--border)",
           display: "flex",
           alignItems: "center",

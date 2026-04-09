@@ -1,55 +1,23 @@
-import { useState } from "react";
-import type { SessionEvent } from "../hooks/useEventStream";
-
-interface FilterState {
-  prompts: boolean;
-  tools: boolean;
-  agents: boolean;
-  jobs: boolean;
-  system: boolean;
-  reads: boolean;
-}
+import { Sun, Moon } from "lucide-react";
+import { FileTree } from "../editor/FileTree";
 
 interface SidebarProps {
-  events: SessionEvent[];
-  filters: FilterState;
-  onFilterChange: (filters: FilterState) => void;
   connected: boolean;
+  activeFile: string | null;
+  onFileSelect: (path: string) => void;
   theme: "dark" | "light";
   onThemeToggle: () => void;
 }
 
-export function Sidebar({ events, filters, onFilterChange, connected, theme, onThemeToggle }: SidebarProps) {
-  const [search, setSearch] = useState("");
-
-  const toggle = (key: keyof FilterState) => {
-    onFilterChange({ ...filters, [key]: !filters[key] });
-  };
-
-  // Stats
-  const counts = {
-    prompts: events.filter((e) => e.type === "user_prompt").length,
-    tools: events.filter((e) => e.type === "tool_call" || e.type === "tool_result").length,
-    agents: events.filter((e) => e.type === "agent_start" || e.type === "agent_stop").length,
-    jobs: events.filter((e) => e.type === "job_update").length,
-    system: events.filter((e) => ["session_start", "session_end", "stop_requested", "stop_blocked"].includes(e.type)).length,
-  };
-
-  const filterButtons: { key: keyof FilterState; label: string; count: number }[] = [
-    { key: "prompts", label: "Prompts", count: counts.prompts },
-    { key: "tools", label: "Tools", count: counts.tools },
-    { key: "agents", label: "Agents", count: counts.agents },
-    { key: "jobs", label: "Jobs", count: counts.jobs },
-    { key: "system", label: "System", count: counts.system },
-    { key: "reads", label: "Show Reads", count: 0 },
-  ];
+export function Sidebar({ connected, activeFile, onFileSelect, theme, onThemeToggle }: SidebarProps) {
+  const ThemeIcon = theme === "dark" ? Sun : Moon;
 
   return (
     <div
       style={{
-        width: 220,
+        width: 200,
+        background: "var(--bg-sidebar)",
         borderRight: "1px solid var(--border)",
-        background: "var(--bg-secondary)",
         display: "flex",
         flexDirection: "column",
         flexShrink: 0,
@@ -59,101 +27,59 @@ export function Sidebar({ events, filters, onFilterChange, connected, theme, onT
       {/* Header */}
       <div
         style={{
-          padding: "12px 14px",
+          padding: "10px 12px",
           borderBottom: "1px solid var(--border)",
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
+          gap: 8,
         }}
       >
-        <span style={{ fontWeight: 700, fontSize: 13 }}>AI Companion</span>
+        <span style={{ fontWeight: 700, fontSize: "var(--text-base)", flex: 1 }}>AI Companion</span>
+        <span
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: "50%",
+            background: connected ? "var(--status-connected)" : "var(--status-disconnected)",
+            flexShrink: 0,
+          }}
+          title={connected ? "Connected" : "Disconnected"}
+        />
         <button
           onClick={onThemeToggle}
           style={{
             background: "none",
             border: "none",
             cursor: "pointer",
-            fontSize: 16,
-            padding: 0,
+            padding: 2,
+            color: "var(--text-muted)",
+            display: "flex",
+            alignItems: "center",
           }}
           title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
         >
-          {theme === "dark" ? "\u2600\uFE0F" : "\uD83C\uDF19"}
+          <ThemeIcon size={14} />
         </button>
       </div>
 
-      {/* Search */}
-      <div style={{ padding: "8px 14px" }}>
-        <input
-          type="text"
-          placeholder="Search events..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "5px 8px",
-            background: "var(--bg-primary)",
-            border: "1px solid var(--border)",
-            borderRadius: "var(--radius)",
-            color: "var(--text-primary)",
-            fontSize: 12,
-            outline: "none",
-          }}
-        />
+      {/* Section label */}
+      <div
+        style={{
+          padding: "8px 12px 4px",
+          fontSize: "var(--text-xs)",
+          fontWeight: 600,
+          color: "var(--text-muted)",
+          textTransform: "uppercase",
+          letterSpacing: "0.05em",
+        }}
+      >
+        Project Files
       </div>
 
-      {/* Filters */}
-      <div style={{ padding: "4px 14px", display: "flex", flexDirection: "column", gap: 2 }}>
-        <div style={{ fontSize: 10, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: 4 }}>
-          Filters
-        </div>
-        {filterButtons.map(({ key, label, count }) => (
-          <button
-            key={key}
-            onClick={() => toggle(key)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "4px 8px",
-              background: filters[key] ? "var(--bg-tertiary)" : "transparent",
-              border: "1px solid",
-              borderColor: filters[key] ? "var(--accent-blue)" : "transparent",
-              borderRadius: "var(--radius)",
-              color: filters[key] ? "var(--text-primary)" : "var(--text-secondary)",
-              cursor: "pointer",
-              fontSize: 12,
-              textAlign: "left",
-            }}
-          >
-            <span>{label}</span>
-            {count > 0 && (
-              <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{count}</span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Stats */}
-      <div style={{ marginTop: "auto", padding: "12px 14px", borderTop: "1px solid var(--border)" }}>
-        <div style={{ fontSize: 10, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: 6 }}>
-          Session
-        </div>
-        <div style={{ fontSize: 11, color: "var(--text-secondary)", display: "flex", flexDirection: "column", gap: 2 }}>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span>Events</span>
-            <span>{events.length}</span>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span>Status</span>
-            <span style={{ color: connected ? "var(--accent-green)" : "var(--accent-red)" }}>
-              {connected ? "Connected" : "Disconnected"}
-            </span>
-          </div>
-        </div>
+      {/* File tree */}
+      <div style={{ flex: 1, overflow: "auto" }}>
+        <FileTree onFileSelect={onFileSelect} activeFile={activeFile} />
       </div>
     </div>
   );
 }
-
-export type { FilterState };

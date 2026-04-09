@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { User } from "lucide-react";
 import type { SessionEvent } from "../../hooks/useEventStream";
 
 const SIGNAL_COLORS: Record<string, string> = {
@@ -21,7 +22,7 @@ export function UserPrompt({ event }: { event: SessionEvent }) {
   return (
     <div
       style={{
-        background: "var(--bg-tertiary)",
+        background: "var(--bg-elevated)",
         border: "1px solid var(--border)",
         borderRadius: "var(--radius-lg)",
         padding: "10px 14px",
@@ -29,12 +30,12 @@ export function UserPrompt({ event }: { event: SessionEvent }) {
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-        <span style={{ fontSize: 14 }}>&#x1F9D1;</span>
-        <span style={{ fontWeight: 600, fontSize: 12 }}>You</span>
+        <User size={14} style={{ color: "var(--text-secondary)" }} />
+        <span style={{ fontWeight: 600, fontSize: "var(--text-sm)" }}>You</span>
         {signal && (
           <span
             style={{
-              fontSize: 10,
+              fontSize: "var(--text-xs)",
               fontWeight: 600,
               padding: "1px 6px",
               borderRadius: 10,
@@ -45,10 +46,10 @@ export function UserPrompt({ event }: { event: SessionEvent }) {
             {signal.replace(/[\[\]]/g, "")}
           </span>
         )}
-        <span style={{ marginLeft: "auto", fontSize: 11, color: "var(--text-muted)" }}>{ts}</span>
+        <span style={{ marginLeft: "auto", fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>{ts}</span>
       </div>
       <div
-        style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 13, lineHeight: 1.6 }}
+        style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: "var(--text-base)", lineHeight: "var(--leading-relaxed)", cursor: isLong ? "pointer" : "default" }}
         onClick={() => isLong && setExpanded(!expanded)}
       >
         {displayText}

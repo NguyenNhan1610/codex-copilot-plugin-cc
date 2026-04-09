@@ -13,53 +13,30 @@ interface ChatFeedProps {
 export function ChatFeed({ events, connected }: ChatFeedProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
+  const [showReads, setShowReads] = useState(false);
 
-  const grouped = useMemo(() => groupEvents(events), [events]);
+  // Filter reads locally
+  const filteredEvents = useMemo(() => {
+    if (showReads) return events;
+    return events.filter((e) => e.tool !== "Read");
+  }, [events, showReads]);
 
-  // Auto-scroll on new events
+  const grouped = useMemo(() => groupEvents(filteredEvents), [filteredEvents]);
+
   useEffect(() => {
     if (autoScroll && containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
   }, [grouped.length, autoScroll]);
 
-  // Detect user scroll position
   function handleScroll() {
     const el = containerRef.current;
     if (!el) return;
-    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 50;
-    setAutoScroll(atBottom);
+    setAutoScroll(el.scrollHeight - el.scrollTop - el.clientHeight < 50);
   }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", minWidth: 0 }}>
-      {/* Connection status */}
-      <div
-        style={{
-          padding: "6px 16px",
-          borderBottom: "1px solid var(--border)",
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          fontSize: 12,
-          color: "var(--text-secondary)",
-          background: "var(--bg-secondary)",
-          flexShrink: 0,
-        }}
-      >
-        <span
-          style={{
-            width: 8,
-            height: 8,
-            borderRadius: "50%",
-            background: connected ? "var(--accent-green)" : "var(--accent-red)",
-            display: "inline-block",
-          }}
-        />
-        {connected ? "Connected" : "Reconnecting..."}
-        <span style={{ marginLeft: "auto" }}>{events.length} events</span>
-      </div>
-
       {/* Event stream */}
       <div
         ref={containerRef}
@@ -67,7 +44,7 @@ export function ChatFeed({ events, connected }: ChatFeedProps) {
         style={{
           flex: 1,
           overflowY: "auto",
-          padding: "12px 16px",
+          padding: "12px 12px",
           display: "flex",
           flexDirection: "column",
           gap: 8,
@@ -82,6 +59,7 @@ export function ChatFeed({ events, connected }: ChatFeedProps) {
               height: "100%",
               color: "var(--text-muted)",
               fontStyle: "italic",
+              fontSize: "var(--text-base)",
             }}
           >
             Waiting for session events...
@@ -100,30 +78,50 @@ export function ChatFeed({ events, connected }: ChatFeedProps) {
         )}
       </div>
 
-      {/* Scroll indicator */}
-      {!autoScroll && (
-        <button
-          onClick={() => {
-            setAutoScroll(true);
-            containerRef.current?.scrollTo({ top: containerRef.current.scrollHeight, behavior: "smooth" });
-          }}
-          style={{
-            position: "absolute",
-            bottom: 16,
-            right: 24,
-            padding: "6px 12px",
-            background: "var(--accent-blue)",
-            color: "#fff",
-            border: "none",
-            borderRadius: "var(--radius)",
-            cursor: "pointer",
-            fontSize: 12,
-            zIndex: 10,
-          }}
-        >
-          Scroll to bottom
-        </button>
-      )}
+      {/* Scroll-to-bottom + reads toggle */}
+      <div
+        style={{
+          padding: "4px 12px",
+          borderTop: "1px solid var(--border)",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          fontSize: "var(--text-xs)",
+          color: "var(--text-muted)",
+          flexShrink: 0,
+          background: "var(--bg-panel)",
+        }}
+      >
+        <label style={{ display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}>
+          <input
+            type="checkbox"
+            checked={showReads}
+            onChange={(e) => setShowReads(e.target.checked)}
+            style={{ accentColor: "var(--accent-blue)" }}
+          />
+          Show reads
+        </label>
+        <span style={{ marginLeft: "auto" }}>{filteredEvents.length} events</span>
+        {!autoScroll && (
+          <button
+            onClick={() => {
+              setAutoScroll(true);
+              containerRef.current?.scrollTo({ top: containerRef.current.scrollHeight, behavior: "smooth" });
+            }}
+            style={{
+              padding: "2px 8px",
+              background: "var(--accent-blue)",
+              color: "#fff",
+              border: "none",
+              borderRadius: "var(--radius)",
+              cursor: "pointer",
+              fontSize: "var(--text-xs)",
+            }}
+          >
+            Scroll to bottom
+          </button>
+        )}
+      </div>
     </div>
   );
 }
