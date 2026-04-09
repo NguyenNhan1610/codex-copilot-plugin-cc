@@ -259,7 +259,7 @@ function installRules(cwd, specifiers) {
 function handleSetup(argv, backend) {
   const { options, positionals } = parseCommandInput(argv, {
     valueOptions: ["cwd", "provider", "install-rules"],
-    booleanOptions: ["json", "enable-review-gate", "disable-review-gate", "install-mermaid", "init"]
+    booleanOptions: ["json", "enable-review-gate", "disable-review-gate", "install-mermaid", "init", "ui"]
   });
 
   // Allow --provider to override the backend for setup checks
@@ -402,6 +402,71 @@ Document flow: ADR → FDR → IMPL → TODO → code → test → lint → casc
       lines.push("All directories already exist.");
     }
     lines.push(`CLAUDE.md: ${claudeMdAction}`);
+
+    // Handle --ui: install deps + start dashboard server
+    if (options.ui) {
+      const uiDir = path.join(SCRIPT_DIR, "..", "ui");
+      const uiServerPath = path.join(uiDir, "dist", "server", "index.js");
+      const uiPortFile = path.join(cwd, ".claude", ".ui-port");
+      const uiPidFile = path.join(cwd, ".claude", ".ui-pid");
+
+      // Install node-pty if not present (native dep for full terminal support)
+      const nodePtyDir = path.join(uiDir, "node_modules", "node-pty");
+      if (fs.existsSync(uiDir) && !fs.existsSync(nodePtyDir)) {
+        lines.push("Installing node-pty for terminal support...");
+        try {
+          const { execSync } = await import("node:child_process");
+          execSync("npm install node-pty --no-save", { cwd: uiDir, stdio: "pipe", timeout: 60000 });
+          lines.push("node-pty: installed");
+        } catch {
+          lines.push("node-pty: install failed (terminal will use basic fallback)");
+        }
+      } else if (fs.existsSync(nodePtyDir)) {
+        lines.push("node-pty: already installed");
+      }
+
+      if (fs.existsSync(uiServerPath)) {
+        // Kill existing UI server if running
+        if (fs.existsSync(uiPidFile)) {
+          try {
+            const oldPid = parseInt(fs.readFileSync(uiPidFile, "utf8").trim(), 10);
+            process.kill(oldPid, "SIGTERM");
+          } catch { /* already dead */ }
+          try { fs.unlinkSync(uiPidFile); } catch {}
+          try { fs.unlinkSync(uiPortFile); } catch {}
+        }
+
+        const { spawn } = await import("node:child_process");
+        const child = spawn("node", [uiServerPath, "--project-root", cwd, "--port", "0"], {
+          stdio: "ignore",
+          detached: true,
+          env: { ...process.env, CLAUDE_PLUGIN_DATA: process.env.CLAUDE_PLUGIN_DATA || "" },
+        });
+        child.unref();
+
+        if (child.pid) {
+          fs.writeFileSync(uiPidFile, String(child.pid), "utf8");
+
+          // Wait for port file (max 5s)
+          let uiPort = null;
+          for (let i = 0; i < 50; i++) {
+            await new Promise((r) => setTimeout(r, 100));
+            if (fs.existsSync(uiPortFile)) {
+              uiPort = fs.readFileSync(uiPortFile, "utf8").trim();
+              break;
+            }
+          }
+
+          if (uiPort) {
+            lines.push(`Dashboard: http://127.0.0.1:${uiPort}`);
+          } else {
+            lines.push("Dashboard: server started but port not yet available");
+          }
+        }
+      } else {
+        lines.push("Dashboard: UI not built (run `npm run build` in plugins/ai/ui/)");
+      }
+    }
 
     outputResult(
       options.json

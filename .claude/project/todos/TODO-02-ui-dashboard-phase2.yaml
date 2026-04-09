@@ -1,0 +1,222 @@
+# TODO-02: UI Dashboard — Phase 2: Chat Feed UI + Event Widgets
+# Source: IMPL-01-ui-dashboard.md
+# Goal: React frontend with scrollable chat feed, 14 typed widgets, filtering, theming
+# Depends on: Phase 1 (server + event bus)
+
+metadata:
+  title: "UI Dashboard Phase 2: Chat Feed + Widgets"
+  source: IMPL-01-ui-dashboard
+  phase: 2
+  created: 2026-04-09
+  references:
+    impl: IMPL-01-ui-dashboard
+    blockedBy: TODO-01 (Phase 1)
+  tracks:
+    - frontend
+    - widgets
+    - ux
+
+tasks:
+  - id: T01
+    title: React app skeleton
+    status: complete
+    priority: P0
+    track: frontend
+    description: |
+      Create main.tsx (React 19 root), App.tsx (layout shell: sidebar + main),
+      index.css (CSS reset, dark theme vars, monospace), index.html (Vite entry).
+      Layout: 240px sidebar | flex-grow chat feed.
+    files:
+      - plugins/ai/ui/src/main.tsx
+      - plugins/ai/ui/src/App.tsx
+      - plugins/ai/ui/src/index.css
+      - plugins/ai/ui/index.html
+    acceptance: npm run dev opens browser with empty layout shell
+    references:
+      impl: IMPL-01 P2-T01
+    dependencies: []
+    blocks: [T02, T03]
+
+  - id: T02
+    title: WebSocket client hook
+    status: complete
+    priority: P0
+    track: frontend
+    description: |
+      Create useEventStream.ts React hook — connects to ws://{host}/ws/events,
+      auto-reconnect with exponential backoff (1s→30s), receives history replay,
+      appends events to state array, clear() to reset. Cleanup on unmount.
+    files:
+      - plugins/ai/ui/src/hooks/useEventStream.ts
+    acceptance: Hook connects, reconnects after restart, events accumulate in state
+    references:
+      impl: IMPL-01 P2-T02
+    dependencies: [T01]
+    blocks: [T03]
+
+  - id: T03
+    title: ChatFeed container + EventRouter
+    status: complete
+    priority: P0
+    track: frontend
+    description: |
+      ChatFeed.tsx: scrollable container, maps events to widgets via EventRouter,
+      auto-scroll with scroll lock (disable on user scroll-up, re-enable on scroll-to-bottom),
+      connection status indicator, empty state message.
+      EventRouter.tsx: switch on event.type + event.tool to select widget component.
+      Routing: user_prompt→UserPrompt, tool+Bash→BashCommand, tool+Edit→CodeDiff,
+      tool+Write→FileCreate, tool+Read→FileRead, tool+Grep/Glob→SearchResult,
+      tool+Agent→AgentStart, agent_stop→AgentResult, job_update→JobStatus,
+      stop_blocked→LintResult/ReviewResult, session_*→SessionEvent, fallback→GenericEvent.
+    files:
+      - plugins/ai/ui/src/feed/ChatFeed.tsx
+      - plugins/ai/ui/src/feed/EventRouter.tsx
+    acceptance: Events render as correct widget types in scrollable feed
+    references:
+      impl: IMPL-01 P2-T03
+    dependencies: [T01, T02]
+    blocks: [T04, T05, T06, T07, T08, T09]
+
+  - id: T04
+    title: Core widgets — UserPrompt + SessionEvent
+    status: complete
+    priority: P0
+    track: widgets
+    description: |
+      UserPrompt.tsx: chat bubble, signal tag badge (colored pill — NEW blue,
+      REVISION orange, ACCEPTED green, CONTINUE gray, QUESTION purple),
+      timestamp header, full prompt text with expand on click for long prompts.
+      SessionEvent.tsx: thin horizontal divider, centered label, session_start/end/stop,
+      minimal height, muted colors.
+    files:
+      - plugins/ai/ui/src/feed/widgets/UserPrompt.tsx
+      - plugins/ai/ui/src/feed/widgets/SessionEvent.tsx
+    acceptance: User prompts render with signal badges, session events as dividers
+    references:
+      impl: IMPL-01 P2-T04
+    dependencies: [T03]
+    blocks: []
+
+  - id: T05
+    title: Tool widgets — BashCommand + CodeDiff + FileCreate
+    status: complete
+    priority: P0
+    track: widgets
+    description: |
+      BashCommand.tsx: dark terminal card, $ command header (truncate 120 chars),
+      pre output with ANSI color parsing, collapsible >20 lines, exit code badge,
+      copy buttons.
+      CodeDiff.tsx: file path header + line range badge, unified diff (red/green),
+      parse old_string/new_string, diff npm package (15KB), collapsible >30 lines,
+      pending state with spinner during tool_call.
+      FileCreate.tsx: file path + NEW badge, 20-line preview with line numbers,
+      language detection from extension, expandable.
+    files:
+      - plugins/ai/ui/src/feed/widgets/BashCommand.tsx
+      - plugins/ai/ui/src/feed/widgets/CodeDiff.tsx
+      - plugins/ai/ui/src/feed/widgets/FileCreate.tsx
+    acceptance: Bash shows terminal output, edits show color diffs, new files show preview
+    references:
+      impl: IMPL-01 P2-T05
+    dependencies: [T03]
+    blocks: []
+
+  - id: T06
+    title: Tool widgets — FileRead + SearchResult + WebResult
+    status: complete
+    priority: P1
+    track: widgets
+    description: |
+      FileRead.tsx: compact inline chip (not full card), file icon + relative path,
+      click to expand content, groupable (consecutive reads → "Read N files").
+      SearchResult.tsx: card for Grep/Glob, search icon + pattern + file count,
+      Grep shows matching lines with highlights, Glob shows file chips, collapsible >10.
+      WebResult.tsx: card for WebSearch/WebFetch, query + result snippets,
+      URL + response preview, link icon.
+    files:
+      - plugins/ai/ui/src/feed/widgets/FileRead.tsx
+      - plugins/ai/ui/src/feed/widgets/SearchResult.tsx
+      - plugins/ai/ui/src/feed/widgets/WebResult.tsx
+    acceptance: Reads show as compact chips, search results highlight matches
+    references:
+      impl: IMPL-01 P2-T06
+    dependencies: [T03]
+    blocks: []
+
+  - id: T07
+    title: Agent + Job + Question widgets
+    status: complete
+    priority: P1
+    track: widgets
+    description: |
+      AgentStart.tsx: agent icon + description, spinner animation, agent type +
+      prompt preview, indentation/left-border for child events.
+      AgentResult.tsx: checkmark/X replacing spinner, duration badge, collapsible output.
+      JobStatus.tsx: Codex/Copilot job card with ID, kind, status, phase, elapsed,
+      progress bar/spinner, View Result + Cancel buttons, auto-updates keyed by jobId,
+      status colors (running=blue, completed=green, failed=red, cancelled=gray).
+      QuestionWidget.tsx: question mark icon, question text, pending→answered state,
+      option chips.
+    files:
+      - plugins/ai/ui/src/feed/widgets/AgentStart.tsx
+      - plugins/ai/ui/src/feed/widgets/AgentResult.tsx
+      - plugins/ai/ui/src/feed/widgets/JobStatus.tsx
+      - plugins/ai/ui/src/feed/widgets/QuestionWidget.tsx
+    acceptance: Agent lifecycle shows states, jobs show live progress with actions
+    references:
+      impl: IMPL-01 P2-T07
+    dependencies: [T03]
+    blocks: []
+
+  - id: T08
+    title: Event filtering + sidebar controls
+    status: complete
+    priority: P1
+    track: ux
+    description: |
+      Sidebar.tsx: filter section with toggle buttons for event categories
+      (Prompts, Tools, Agents, Jobs, System), tool sub-filters (Bash, Edit, Write,
+      Read, Search), text search, "Show reads" toggle (off by default).
+      Stats section: event count by type, session duration, connection status.
+    files:
+      - plugins/ai/ui/src/layout/Sidebar.tsx
+    acceptance: Toggling filters instantly shows/hides events. Reads hidden by default.
+    references:
+      impl: IMPL-01 P2-T08
+    dependencies: [T03]
+    blocks: []
+
+  - id: T09
+    title: Event grouping + noise reduction
+    status: complete
+    priority: P2
+    track: ux
+    description: |
+      EventGrouper.ts: group 3+ consecutive Reads into "Read N files" expandable,
+      pair tool_call with tool_result by tool+timestamp into single widget with
+      pending→complete transition, group consecutive Glob/Grep into "Searched N patterns",
+      indent events between agent_start and agent_stop with left border.
+    files:
+      - plugins/ai/ui/src/feed/EventGrouper.ts
+    acceptance: Feed readable during high-throughput (agent reading 20 files)
+    references:
+      impl: IMPL-01 P2-T09
+    dependencies: [T03]
+    blocks: []
+
+  - id: T10
+    title: Dark/light theme + responsive layout
+    status: complete
+    priority: P2
+    track: ux
+    description: |
+      theme.ts: CSS custom properties for colors, spacing, typography.
+      Dark theme (default), light theme with accessible contrast.
+      Theme toggle in sidebar header. Persist in localStorage.
+    files:
+      - plugins/ai/ui/src/styles/theme.ts
+    acceptance: Theme toggle works, both modes readable
+    references:
+      impl: IMPL-01 P2-T10
+    dependencies: []
+    blocks: []

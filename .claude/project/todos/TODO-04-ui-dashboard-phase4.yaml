@@ -1,0 +1,124 @@
+# TODO-04: UI Dashboard — Phase 4: Terminal Integration
+# Source: IMPL-01-ui-dashboard.md
+# Goal: Embedded xterm.js terminal in the dashboard, running in project directory.
+#        Sibling shell (not Claude Code session itself). Plus cascade live feed.
+# Depends on: Phase 1 (server), Phase 2 (feed layout)
+
+metadata:
+  title: "UI Dashboard Phase 4: Terminal Integration"
+  source: IMPL-01-ui-dashboard
+  phase: 4
+  created: 2026-04-09
+  references:
+    impl: IMPL-01-ui-dashboard
+    blockedBy: [TODO-01, TODO-02]
+  tracks:
+    - terminal
+    - cascade
+    - fallback
+
+tasks:
+  - id: T01
+    title: node-pty server-side setup
+    status: complete
+    priority: P0
+    track: terminal
+    description: |
+      Add node-pty to package.json dependencies.
+      Create server/lib/pty.ts — PtyManager class:
+        spawn(cwd, shell?) — create PTY with project cwd, TERM=xterm-256color, 120x30 default.
+        resize(cols, rows) — resize PTY.
+        write(data) — write to PTY stdin.
+        onData(callback) — PTY stdout.
+        kill() — terminate PTY process.
+      Single PTY per server instance. Auto-kill on server shutdown.
+
+      Create server/routes/terminal.ts — GET /ws/terminal (WebSocket upgrade):
+        Client→server: { type: "input", data } (write), { type: "resize", cols, rows } (resize).
+        Server→client: { type: "output", data } (stdout), { type: "exit", code } (exited).
+        Keep PTY alive on disconnect (reconnectable). Second connection attaches to existing.
+    files:
+      - plugins/ai/ui/server/lib/pty.ts
+      - plugins/ai/ui/server/routes/terminal.ts
+    acceptance: wscat connects to terminal WS, send commands, receive output
+    references:
+      impl: IMPL-01 P4-T01
+    dependencies: []
+    blocks: [T02, T03, T05]
+
+  - id: T02
+    title: xterm.js terminal component
+    status: complete
+    priority: P0
+    track: terminal
+    description: |
+      Add deps: @xterm/xterm, @xterm/addon-fit, @xterm/addon-web-links, @xterm/addon-search.
+      Create TerminalPanel.tsx — xterm.js Terminal instance with FitAddon (auto-resize),
+      WebLinksAddon (clickable URLs), SearchAddon (Ctrl+Shift+F).
+      WebSocket to /ws/terminal. On data → send to WS. On WS message → write to terminal.
+      Send resize events via ResizeObserver. Toolbar: Clear, Search, Copy, Paste, Fullscreen.
+      Theme: match dashboard dark/light theme.
+    files:
+      - plugins/ai/ui/src/terminal/TerminalPanel.tsx
+    acceptance: Terminal renders, typing works, output displays, resize works
+    references:
+      impl: IMPL-01 P4-T02
+    dependencies: [T01]
+    blocks: [T03]
+
+  - id: T03
+    title: Terminal integration in chat feed
+    status: complete
+    priority: P1
+    track: terminal
+    description: |
+      Two terminal modes:
+      1. Docked panel (default): fixed-height at bottom of chat feed (like VS Code terminal),
+         drag handle to resize, toggle show/hide, Ctrl+` shortcut.
+      2. Inline block (optional): BashCommand widget has "Open in terminal" button,
+         creates inline terminal block pre-filled with the command.
+    files:
+      - plugins/ai/ui/src/App.tsx
+    acceptance: Terminal panel at bottom, toggleable, resizable
+    references:
+      impl: IMPL-01 P4-T03
+    dependencies: [T01, T02]
+    blocks: []
+
+  - id: T04
+    title: Cascade live feed panel
+    status: complete
+    priority: P1
+    track: cascade
+    description: |
+      Create CascadeFeed.tsx — separate tab/view showing raw cascade log in real-time.
+      Read .claude/cascades/{branch}.md on load. fs.watch via server → WebSocket push.
+      Rendered as formatted markdown: signal tag color coding, file paths as clickable
+      links (open in editor), timestamps highlighted, user prompt sections visually distinct.
+      Auto-scroll with scroll lock.
+      This is the "raw log" view vs the "chat widget" view — user can switch.
+    files:
+      - plugins/ai/ui/src/feed/CascadeFeed.tsx
+    acceptance: Cascade log renders live, updates on new entries, links clickable
+    references:
+      impl: IMPL-01 P4-T04
+    dependencies: []
+    blocks: []
+
+  - id: T05
+    title: node-pty fallback for environments without native deps
+    status: complete
+    priority: P2
+    track: fallback
+    description: |
+      Create server/lib/pty-fallback.ts — try dynamic import("node-pty"),
+      if fails: fall back to child_process.spawn with "script -q /dev/null bash"
+      (Unix PTY emulation). Limitations: no resize, no raw mode, basic I/O only.
+      Log warning about degraded terminal.
+    files:
+      - plugins/ai/ui/server/lib/pty-fallback.ts
+    acceptance: Dashboard works without node-pty installed (degraded terminal)
+    references:
+      impl: IMPL-01 P4-T05
+    dependencies: [T01]
+    blocks: []

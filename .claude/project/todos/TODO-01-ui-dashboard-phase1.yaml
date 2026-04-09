@@ -1,0 +1,174 @@
+# TODO-01: UI Dashboard — Phase 1: Server Infrastructure + Event Pipeline
+# Source: IMPL-01-ui-dashboard.md
+# Goal: Fastify server, WebSocket event bus, universal hook emitter, server lifecycle
+# Verify with: wscat and curl (no UI yet)
+
+metadata:
+  title: "UI Dashboard Phase 1: Server Infrastructure"
+  source: IMPL-01-ui-dashboard
+  phase: 1
+  created: 2026-04-09
+  references:
+    impl: IMPL-01-ui-dashboard
+  tracks:
+    - server
+    - hooks
+    - lifecycle
+
+tasks:
+  - id: T01
+    title: Initialize UI package
+    status: complete
+    priority: P0
+    track: server
+    description: |
+      Create plugins/ai/ui/ with package.json, tsconfig.json, vite.config.ts.
+      Dependencies: fastify, @fastify/websocket, @fastify/static, @fastify/cors.
+      Dev deps: vite, react 19, typescript, tsx, esbuild, concurrently.
+    files:
+      - plugins/ai/ui/package.json
+      - plugins/ai/ui/tsconfig.json
+      - plugins/ai/ui/vite.config.ts
+    acceptance: npm install succeeds, npx vite build produces dist/
+    references:
+      impl: IMPL-01 P1-T01
+    dependencies: []
+    blocks: [T02, T03]
+
+  - id: T02
+    title: Event schema + shared types
+    status: complete
+    priority: P0
+    track: server
+    description: |
+      Create plugins/ai/ui/shared/types.ts with SessionEvent interface,
+      EventType/ToolName/SignalTag union types, JobState interface,
+      FileEntry interface, createEvent() helper.
+    files:
+      - plugins/ai/ui/shared/types.ts
+    acceptance: Types compile, importable from both server/ and src/
+    references:
+      impl: IMPL-01 P1-T02
+    dependencies: [T01]
+    blocks: [T04, T05]
+
+  - id: T03
+    title: Fastify server skeleton
+    status: complete
+    priority: P0
+    track: server
+    description: |
+      Create plugins/ai/ui/server/index.ts — parse CLI args (--project-root, --port),
+      register Fastify plugins, bind 127.0.0.1 only, write .ui-port on listen,
+      remove .ui-port on shutdown, GET /api/health endpoint, graceful shutdown 5s.
+    files:
+      - plugins/ai/ui/server/index.ts
+    acceptance: Server starts, writes port file, /api/health responds, Ctrl-C removes port file
+    references:
+      impl: IMPL-01 P1-T03
+    dependencies: [T01]
+    blocks: [T04, T07, T08]
+
+  - id: T04
+    title: WebSocket event bus
+    status: complete
+    priority: P0
+    track: server
+    description: |
+      Create EventBus class (clients Set, 500-event ring buffer history, emit/subscribe/unsubscribe).
+      Create routes/events.ts: POST /api/events (validate + emit), GET /ws/events (subscribe + replay).
+    files:
+      - plugins/ai/ui/server/lib/event-bus.ts
+      - plugins/ai/ui/server/routes/events.ts
+    acceptance: curl POST → event arrives in wscat WebSocket connection
+    references:
+      impl: IMPL-01 P1-T04
+    dependencies: [T02, T03]
+    blocks: [T05, T06, T07]
+
+  - id: T05
+    title: Universal hook event emitter
+    status: complete
+    priority: P1
+    track: hooks
+    description: |
+      Create plugins/ai/hooks/ui-event-emitter.sh — reads hook JSON from stdin,
+      checks .ui-port file exists, builds event payload with jq, POSTs to server
+      fire-and-forget. Instant exit if UI not running (zero overhead).
+    files:
+      - plugins/ai/hooks/ui-event-emitter.sh
+    acceptance: With server running, trigger any hook → event appears in WebSocket stream
+    references:
+      impl: IMPL-01 P1-T05
+    dependencies: [T04]
+    blocks: [T06]
+
+  - id: T06
+    title: Register new hooks in hooks.json
+    status: complete
+    priority: P1
+    track: hooks
+    description: |
+      Add ui-event-emitter.sh to ALL hook events: PreToolUse (matcher *),
+      PostToolUse (matcher *, alongside existing cascade-logger),
+      SubagentStop (matcher *), UserPromptSubmit, Stop, SessionStart, SessionEnd.
+      Keep all existing hooks unchanged.
+    files:
+      - plugins/ai/hooks/hooks.json
+    acceptance: All 7 hook event types fire the emitter. Existing hooks unaffected.
+    references:
+      impl: IMPL-01 P1-T06
+    dependencies: [T05]
+    blocks: []
+
+  - id: T07
+    title: Job state watcher
+    status: complete
+    priority: P1
+    track: server
+    description: |
+      Create server/lib/job-watcher.ts — fs.watch on CLAUDE_PLUGIN_DATA/state/{workspace}/jobs/,
+      parse job state files on change, emit job_update events to EventBus.
+      500ms debounce per job ID. Skip gracefully if directory doesn't exist.
+    files:
+      - plugins/ai/ui/server/lib/job-watcher.ts
+    acceptance: Start a Codex review → job_update events stream to WebSocket
+    references:
+      impl: IMPL-01 P1-T07
+    dependencies: [T03, T04]
+    blocks: []
+
+  - id: T08
+    title: Server lifecycle in setup command
+    status: complete
+    priority: P2
+    track: lifecycle
+    description: |
+      Add --ui flag to /ai:setup --init. After creating project dirs, spawn UI server
+      as background process, write PID to .ui-pid, wait for .ui-port (5s timeout),
+      print dashboard URL, open browser. On SessionEnd: kill server, remove .ui-pid/.ui-port.
+    files:
+      - plugins/ai/commands/setup.md
+      - plugins/ai/scripts/ai-companion.mjs
+      - plugins/ai/scripts/session-lifecycle-hook.mjs
+    acceptance: /ai:setup --init --ui starts server, session end kills it
+    references:
+      impl: IMPL-01 P1-T08
+    dependencies: [T03]
+    blocks: []
+
+  - id: T09
+    title: Add .ui-port and .ui-pid to .gitignore
+    status: complete
+    priority: P3
+    track: lifecycle
+    description: |
+      Add .claude/.ui-port and .claude/.ui-pid to .gitignore so UI runtime
+      files are never committed.
+    files:
+      - .gitignore
+    acceptance: git status does not show UI runtime files
+    references:
+      impl: IMPL-01 P1-T09
+    dependencies: []
+    blocks: []

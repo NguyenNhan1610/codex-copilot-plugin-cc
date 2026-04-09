@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import fs from "node:fs";
+import path from "node:path";
 import process from "node:process";
 
 import { terminateProcessTree } from "./lib/process.mjs";
@@ -73,6 +74,25 @@ function cleanupSessionJobs(cwd, sessionId) {
   });
 }
 
+function cleanupUiDashboard(cwd) {
+  const pidFile = path.join(cwd, ".claude", ".ui-pid");
+  const portFile = path.join(cwd, ".claude", ".ui-port");
+
+  if (fs.existsSync(pidFile)) {
+    try {
+      const pid = parseInt(fs.readFileSync(pidFile, "utf8").trim(), 10);
+      if (pid > 0) {
+        terminateProcessTree(pid);
+      }
+    } catch {
+      // Process may already be dead
+    }
+    try { fs.unlinkSync(pidFile); } catch {}
+  }
+
+  try { fs.unlinkSync(portFile); } catch {}
+}
+
 function handleSessionStart(input) {
   appendEnvVar(SESSION_ID_ENV, input.session_id);
   appendEnvVar(PLUGIN_DATA_ENV, process.env[PLUGIN_DATA_ENV]);
@@ -98,6 +118,9 @@ async function handleSessionEnd(input) {
   if (brokerEndpoint) {
     await sendBrokerShutdown(brokerEndpoint);
   }
+
+  // Cleanup UI dashboard server
+  cleanupUiDashboard(cwd);
 
   cleanupSessionJobs(cwd, input.session_id || process.env[SESSION_ID_ENV]);
   teardownBrokerSession({

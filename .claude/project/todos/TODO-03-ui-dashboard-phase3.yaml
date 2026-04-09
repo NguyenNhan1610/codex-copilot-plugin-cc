@@ -1,0 +1,181 @@
+# TODO-03: UI Dashboard — Phase 3: BlockNote Project Editor
+# Source: IMPL-01-ui-dashboard.md
+# Goal: Rich document editor for .claude/project/ files with BlockNote,
+#        file tree, markdown round-trip, custom blocks (YAML, Mermaid, TODO Kanban)
+# Depends on: Phase 1 (server), Phase 2 (layout shell)
+
+metadata:
+  title: "UI Dashboard Phase 3: BlockNote Project Editor"
+  source: IMPL-01-ui-dashboard
+  phase: 3
+  created: 2026-04-09
+  references:
+    impl: IMPL-01-ui-dashboard
+    blockedBy: [TODO-01, TODO-02]
+  tracks:
+    - editor
+    - api
+    - blocks
+
+tasks:
+  - id: T01
+    title: File CRUD REST API
+    status: complete
+    priority: P0
+    track: api
+    description: |
+      Create server/routes/files.ts scoped to {projectRoot}/.claude/project/ only.
+      GET /api/files/tree — recursive directory listing as JSON tree.
+      GET /api/files/:path(*) — read file content (raw text).
+      PUT /api/files/:path(*) — write file content (create/overwrite).
+      DELETE /api/files/:path(*) — delete file.
+      POST /api/files/mkdir/:path(*) — create directory.
+      Security: resolve all paths, verify under .claude/project/, reject "..",
+      reject symlinks outside scope, max file size 1MB.
+
+      Create server/lib/file-watcher.ts — fs.watch on .claude/project/ recursively,
+      emit file_changed events to EventBus, 300ms debounce per path.
+    files:
+      - plugins/ai/ui/server/routes/files.ts
+      - plugins/ai/ui/server/lib/file-watcher.ts
+    acceptance: curl CRUD operations work, file tree reflects actual directory
+    references:
+      impl: IMPL-01 P3-T01
+    dependencies: []
+    blocks: [T02, T03, T06, T07]
+
+  - id: T02
+    title: File tree sidebar component
+    status: complete
+    priority: P0
+    track: editor
+    description: |
+      Create FileTree.tsx — fetch from GET /api/files/tree, collapsible directory
+      nodes with icons, file icons by extension (.md, .yaml, .svg), click opens in
+      editor, right-click context menu (New file, New folder, Delete, Rename),
+      auto-refresh on file_changed events, active file highlighted.
+      Directory groups: adr/, fdr/, implementation_plans/, todos/, cascades/, knowledge/, traces/.
+    files:
+      - plugins/ai/ui/src/editor/FileTree.tsx
+    acceptance: Tree shows all project files, click opens, auto-refreshes on external changes
+    references:
+      impl: IMPL-01 P3-T02
+    dependencies: [T01]
+    blocks: [T03]
+
+  - id: T03
+    title: BlockNote editor integration
+    status: complete
+    priority: P0
+    track: editor
+    description: |
+      Install @blocknote/core, @blocknote/react, @blocknote/mantine (or shadcn).
+      Create DocumentEditor.tsx with BlockNote instance.
+      Markdown round-trip: GET file → parse to blocks, serialize blocks → PUT file.
+      Auto-save: 2s debounce with dirty indicator.
+      Manual save: Ctrl+S / Cmd+S.
+      Toolbar: headings, bold, italic, code, lists, links, tables.
+      Read-only mode for cascade records (REC-*.md).
+    files:
+      - plugins/ai/ui/src/editor/DocumentEditor.tsx
+    acceptance: Open ADR markdown, edit in BlockNote, save, re-open — round-trips correctly
+    references:
+      impl: IMPL-01 P3-T03
+    dependencies: [T01, T02]
+    blocks: [T04, T05, T06, T07]
+
+  - id: T04
+    title: Custom block — YAML frontmatter
+    status: complete
+    priority: P1
+    track: blocks
+    description: |
+      Create FrontmatterBlock.tsx — detect YAML frontmatter (--- delimited) at file start.
+      Render as structured form: key-value pairs as label+input, status as dropdown
+      (Proposed/Accepted/Deprecated), date fields as date picker, tags as chip input.
+      Serialize back to YAML --- block on save.
+      Non-editable keys (name, date) shown read-only.
+    files:
+      - plugins/ai/ui/src/editor/blocks/FrontmatterBlock.tsx
+    acceptance: FDR/ADR frontmatter renders as form, edits serialize correctly
+    references:
+      impl: IMPL-01 P3-T04
+    dependencies: [T03]
+    blocks: []
+
+  - id: T05
+    title: Custom block — Mermaid diagrams
+    status: complete
+    priority: P1
+    track: blocks
+    description: |
+      Create MermaidBlock.tsx — detect fenced ```mermaid code blocks.
+      Split view: code editor (left) + live preview (right).
+      Client-side rendering via mermaid npm package (no mmdc needed).
+      Syntax validation: red border + error message on invalid syntax.
+      Copy SVG button. Export button → server-side /ai:mermaid render for high-quality output.
+    files:
+      - plugins/ai/ui/src/editor/blocks/MermaidBlock.tsx
+    acceptance: Mermaid blocks in ADR/FDR render live diagrams, edits update preview
+    references:
+      impl: IMPL-01 P3-T05
+    dependencies: [T03]
+    blocks: []
+
+  - id: T06
+    title: Custom block — TODO YAML Kanban
+    status: complete
+    priority: P1
+    track: blocks
+    description: |
+      Create TodoBlock.tsx — for .yaml files in todos/ directory.
+      Parse YAML task arrays. Render as Kanban card list grouped by status:
+      pending | in_progress | complete | blocked columns.
+      Each card: title, priority badge, assignee, ticket link, evidence.
+      Click card → expand details. Drag between columns → update status.
+      Serialize back to YAML on save.
+    files:
+      - plugins/ai/ui/src/editor/blocks/TodoBlock.tsx
+    acceptance: TODO YAML files render as Kanban board, drag updates status
+    references:
+      impl: IMPL-01 P3-T06
+    dependencies: [T01, T03]
+    blocks: []
+
+  - id: T07
+    title: Template insertion toolbar
+    status: complete
+    priority: P2
+    track: editor
+    description: |
+      Create TemplateToolbar.tsx — dropdown "Insert Template" in editor toolbar.
+      Options by directory: adr/ → ADR skeleton, fdr/ → FDR skeleton,
+      implementation_plans/ → IMPL skeleton, knowledge/patterns/ → Pattern template,
+      knowledge/lessons/ → Lesson template.
+      Insert at cursor, auto-generate next number from existing files.
+    files:
+      - plugins/ai/ui/src/editor/TemplateToolbar.tsx
+    acceptance: Insert ADR template in adr/ folder → correctly numbered skeleton
+    references:
+      impl: IMPL-01 P3-T07
+    dependencies: [T01, T03]
+    blocks: []
+
+  - id: T08
+    title: Split view — feed + editor
+    status: complete
+    priority: P1
+    track: editor
+    description: |
+      Update App.tsx for three-panel layout: Sidebar | ChatFeed | Editor.
+      Resizable panels with drag handles. Editor panel collapsible (toggle button).
+      When file opened: show editor, reduce feed width.
+      When no file: feed takes full width.
+      Keyboard shortcuts: Ctrl+B toggle sidebar, Ctrl+E toggle editor.
+    files:
+      - plugins/ai/ui/src/App.tsx
+    acceptance: All three panels visible, resizable, collapsible
+    references:
+      impl: IMPL-01 P3-T08
+    dependencies: [T03]
+    blocks: []

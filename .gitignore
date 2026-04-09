@@ -151,3 +151,7 @@ plugins/ai/.generated/
 
 # Cascade change logs
 .claude/cascades/
+
+# UI dashboard runtime files
+.claude/.ui-port
+.claude/.ui-pid

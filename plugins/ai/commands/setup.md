@@ -1,6 +1,6 @@
 ---
 description: Check whether the AI backend CLI is ready and optionally init project, toggle review gate, install coding rules, or install Mermaid.js
-argument-hint: '[--init] [--provider codex|copilot] [--enable-review-gate|--disable-review-gate] [--install-rules ...] [--install-mermaid]'
+argument-hint: '[--init] [--init --ui] [--provider codex|copilot] [--enable-review-gate|--disable-review-gate] [--install-rules ...] [--install-mermaid]'
 allowed-tools: Bash(node:*), Bash(npm:*), AskUserQuestion
 ---
 
