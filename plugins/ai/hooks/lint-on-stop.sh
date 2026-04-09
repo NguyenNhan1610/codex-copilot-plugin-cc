@@ -112,13 +112,19 @@ if [ ${#ts_files[@]} -gt 0 ]; then
     fi
   fi
 
-  # Check if tsc is available — only run on specific changed files
-  if command -v tsc &>/dev/null; then
-    # Use project tsconfig if exists, otherwise use bundled — but always check specific files only
+  # Check if tsc is available — only run on .ts/.tsx files (skip .js/.mjs/.jsx)
+  tsc_files=()
+  for f in "${ts_files[@]}"; do
+    case "$f" in
+      *.ts|*.tsx) tsc_files+=("$f") ;;
+    esac
+  done
+
+  if [ ${#tsc_files[@]} -gt 0 ] && command -v tsc &>/dev/null; then
     if [ -f "$cwd/tsconfig.json" ]; then
-      tsc_out=$(cd "$cwd" && tsc --noEmit --pretty false "${ts_files[@]}" 2>&1 | head -50) || true
+      tsc_out=$(cd "$cwd" && tsc --noEmit --pretty false "${tsc_files[@]}" 2>&1 | head -50) || true
     else
-      tsc_out=$(cd "$cwd" && tsc --noEmit --pretty false --strict --moduleResolution bundler --module ESNext --target ES2022 --jsx react-jsx --skipLibCheck "${ts_files[@]}" 2>&1 | head -50) || true
+      tsc_out=$(cd "$cwd" && tsc --noEmit --pretty false --strict --moduleResolution bundler --module ESNext --target ES2022 --jsx react-jsx --skipLibCheck "${tsc_files[@]}" 2>&1 | head -50) || true
     fi
     if echo "$tsc_out" | grep -q "error TS"; then
       tsc_errors=$(echo "$tsc_out" | grep "error TS" | head -20 || true)
