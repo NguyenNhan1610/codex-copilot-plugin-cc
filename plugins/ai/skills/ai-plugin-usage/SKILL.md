@@ -24,6 +24,7 @@ Use Codex or GitHub Copilot from inside Claude Code for code reviews, multi-agen
 | Continue previous Codex work | `/ai:rescue --resume apply the top fix` |
 | Document an architecture decision | `/ai:adr Should we use Redis or Memcached?` |
 | Plan a feature with risk assessment | `/ai:fdr Add multi-tenant session caching` |
+| Generate implementation checklist | `/ai:implement --from .claude/project/fdr/FDR-03.md` |
 | Render a diagram | `/ai:mermaid render graph TD; A-->B` |
 | Validate diagram syntax | `/ai:mermaid validate graph TD; A-->B` |
 | Install coding rules | `/ai:setup --install-rules fastapi,nextjs` |
@@ -160,6 +161,22 @@ Plan a feature with deep codebase analysis, edge cases, risk assessment, and imp
 Scopes: `backend` (default), `frontend`, `fullstack`, `api`, `data`
 
 Outputs: Dependency graph, data flow diagram, edge case tables, risk matrix, backward compatibility analysis, testing strategy, implementation timeline (Gantt), rollout plan, observability plan. Saved to `.claude/project/fdr/`.
+
+### Implementation Plans
+
+#### `/ai:implement` — DAG-Based Implementation Plan
+
+Convert an FDR or ADR into a DAG of implementation tasks with dependencies, critical path, and parallel tracks.
+
+```bash
+/ai:implement --from .claude/project/fdr/FDR-03-session-caching.md
+/ai:implement --from .claude/project/adr/ADR-05-redis.md --method tdd
+/ai:implement --from .claude/project/fdr/FDR-03.md --method agile
+```
+
+Methods: `pragmatic` (default), `tdd`, `agile`, `kanban`, `shape-up`
+
+Outputs: Task DAG with Mermaid diagram, critical path, parallel tracks, per-task details with files and effort estimates, risk mitigation traceability. Saved to `.claude/project/implementation_plans/`.
 
 ### Task Delegation
 

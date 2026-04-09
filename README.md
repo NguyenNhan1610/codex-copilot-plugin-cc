@@ -30,6 +30,7 @@ A high-quality fork of [openai/codex-plugin-cc](https://github.com/openai/codex-
 | `/ai:debug` | Hypothesis-based debugging with Mermaid decision trees |
 | `/ai:adr` | Architecture Decision Records with Mermaid diagrams |
 | `/ai:fdr` | Feature Development Records with edge cases and risk assessment |
+| `/ai:implement` | DAG-based implementation plans from FDR/ADR documents |
 | `/ai:mermaid` | Validate and render Mermaid.js diagrams |
 | `/ai:setup` | Check backend readiness, install rules, install Mermaid, configure review gate |
 

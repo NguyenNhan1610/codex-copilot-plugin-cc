@@ -62,7 +62,7 @@ test("adversarial review command uses AskUserQuestion and background Bash while 
   assert.match(source, /--model <provider:model>/);
 });
 
-test("plugin exposes exactly 12 unified commands", () => {
+test("plugin exposes exactly 13 unified commands", () => {
   const commandFiles = fs.readdirSync(path.join(PLUGIN_ROOT, "commands")).sort();
   assert.deepEqual(commandFiles, [
     "adr.md",
@@ -71,6 +71,7 @@ test("plugin exposes exactly 12 unified commands", () => {
     "council.md",
     "debug.md",
     "fdr.md",
+    "implement.md",
     "mermaid.md",
     "rescue.md",
     "result.md",
