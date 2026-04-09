@@ -1,6 +1,9 @@
 # Production ruff config for Python projects
 # Covers: errors, pyflakes, isort, bugbear, security, type-checking
 
+target-version = "py311"
+line-length = 120
+
 [lint]
 select = [
   "E",      # pycodestyle errors
@@ -50,6 +53,3 @@ lines-after-imports = 2
 quote-style = "double"
 indent-style = "space"
 line-ending = "auto"
-
-target-version = "py311"
-line-length = 120
