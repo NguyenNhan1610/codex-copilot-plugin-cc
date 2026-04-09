@@ -1,20 +1,40 @@
 # AI Companion Plugin for Claude Code
 
-Use **Codex** or **GitHub Copilot** from inside Claude Code for code reviews, multi-agent council discussions, task delegation, and auto-installable coding rules — with deep support for FastAPI, Next.js, Django, Flutter, and more.
+Use **Codex** or **GitHub Copilot** from inside Claude Code for code reviews, multi-agent discussions, hypothesis debugging, architecture decisions, feature planning, task tracking, and auto-installable coding rules — with deep support for FastAPI, Next.js, Django, Flutter, and more.
 
 A high-quality fork of [openai/codex-plugin-cc](https://github.com/openai/codex-plugin-cc) with significant enhancements.
+
+## Document Flow
+
+```
+ADR → FDR → IMPL → TODO → code → test → lint → cascade → review
+ ↑                   ↑      ↑       ↑      ↑       ↑       ↑
+ └───────────────────┴──────┴───────┴──────┴───────┴───────┘
+                         (all trace back)
+```
 
 ## What's New in This Fork
 
 | Feature | Original | This Fork |
 |---------|----------|-----------|
-| Code review | Diff-based only | **Full codebase** + aspect-based (`security`, `performance`, `architecture`, `antipatterns`) |
+| Code review | Diff-based only | **Full codebase** + aspect-based (security, performance, architecture, antipatterns) |
 | Language support | Generic | **Python, TypeScript, Dart** with techstack variants (FastAPI, Django, Next.js, Flutter) |
 | Multi-agent | None | **`/ai:council`** — parallel agents discuss, debate, synthesize |
-| Coding rules | None | **`/ai:setup --install-rules`** — auto-install best-practice rules into `.claude/rules/` |
-| Cascade logging | None | **PostToolUse hook** tracks all file changes to `.claude/cascades/{branch}.md` |
+| Debugging | None | **`/ai:debug`** — hypothesis-based with Mermaid decision trees |
+| Architecture | None | **`/ai:adr`** — Architecture Decision Records with diagrams |
+| Feature planning | None | **`/ai:fdr`** — Feature Development Records with edge cases + risk assessment |
+| Implementation | None | **`/ai:implement`** — DAG-based task plans from FDR/ADR |
+| Task tracking | None | **`/ai:todo`** — Pydantic-style YAML tasks with status, tickets, evidence |
+| Handoff records | None | **`/ai:cascade`** — implementation records tracing back to all documents |
+| Lint/typecheck | None | **`/ai:lint`** — batch ruff + pyright + eslint + tsc on Stop hook |
+| Diagrams | None | **`/ai:mermaid`** — validate and render Mermaid.js diagrams |
+| Coding rules | None | **`/ai:setup --install-rules`** — auto-install rules into `.claude/rules/` |
+| Cascade logging | None | **PostToolUse + UserPromptSubmit hooks** — timestamps + file:line |
+| Project init | None | **`/ai:setup --init`** — creates project dirs + appends to CLAUDE.md |
 
-## Commands
+## Commands (16)
+
+### Review & Analysis
 
 | Command | Description |
 |---------|-------------|
@@ -23,19 +43,29 @@ A high-quality fork of [openai/codex-plugin-cc](https://github.com/openai/codex-
 | `/ai:review python/fastapi:performance` | FastAPI-specific performance review |
 | `/ai:adversarial-review` | Challenge review that questions design choices |
 | `/ai:council --roles security,performance` | Multi-agent discussion with debate |
+| `/ai:debug` | Hypothesis-based debugging with Mermaid decision trees |
+| `/ai:lint` | Batch lint/typecheck (ruff, pyright, eslint, tsc) |
+
+### Planning & Documentation
+
+| Command | Description |
+|---------|-------------|
+| `/ai:adr` | Architecture Decision Records with Mermaid diagrams |
+| `/ai:fdr` | Feature Development Records with edge cases + risk assessment |
+| `/ai:implement` | DAG-based implementation plans from FDR/ADR |
+| `/ai:todo` | Task tracking with status, tickets, and traceability |
+| `/ai:cascade` | Handoff records with traceability to all documents |
+| `/ai:mermaid` | Validate and render Mermaid.js diagrams |
+
+### Delegation & Management
+
+| Command | Description |
+|---------|-------------|
 | `/ai:rescue` | Delegate investigation or fix to Codex |
 | `/ai:status` | Check job progress |
 | `/ai:result` | Get finished job output |
 | `/ai:cancel` | Cancel a running job |
-| `/ai:debug` | Hypothesis-based debugging with Mermaid decision trees |
-| `/ai:adr` | Architecture Decision Records with Mermaid diagrams |
-| `/ai:fdr` | Feature Development Records with edge cases and risk assessment |
-| `/ai:implement` | DAG-based implementation plans from FDR/ADR documents |
-| `/ai:todo` | Task tracking with status, tickets, and traceability |
-| `/ai:cascade` | Handoff records with traceability to ADR/FDR/IMPL |
-| `/ai:lint` | Batch lint/typecheck (ruff, pyright, eslint, tsc) |
-| `/ai:mermaid` | Validate and render Mermaid.js diagrams |
-| `/ai:setup` | Check backend readiness, install rules, install Mermaid, configure review gate |
+| `/ai:setup` | Backend readiness, init project, install rules/mermaid, review gate |
 
 ## Requirements
 
@@ -57,20 +87,36 @@ A high-quality fork of [openai/codex-plugin-cc](https://github.com/openai/codex-
 
 **Copilot backend:** Run `/ai:setup --provider copilot` to check readiness. If not authenticated, run `!copilot login`. Use `--model copilot:claude-opus-4.5` to select Copilot for individual commands.
 
-### Install Coding Rules (Optional)
+### Full Project Setup
 
 ```bash
-/ai:setup --install-rules fastapi          # FastAPI + Python rules
-/ai:setup --install-rules nextjs           # Next.js + TypeScript rules
-/ai:setup --install-rules fastapi,nextjs   # Both stacks
-/ai:setup --install-rules django           # Django + Python rules
+/ai:setup --init                          # Init project dirs + CLAUDE.md
+/ai:setup --install-rules fastapi,nextjs  # Install coding rules
+/ai:setup --install-mermaid               # Install Mermaid CLI
 ```
 
-This copies best-practice rules into `.claude/rules/` — they load on-demand when Claude reads matching files.
+## Project Structure
+
+After `/ai:setup --init`:
+
+```
+.claude/project/
+├── adr/                      ← /ai:adr — Architecture Decision Records
+├── fdr/                      ← /ai:fdr — Feature Development Records
+├── implementation_plans/     ← /ai:implement — DAG task plans
+├── todos/                    ← /ai:todo — Task tracking (YAML)
+├── cascades/                 ← /ai:cascade — Implementation records
+├── scripts/hypothesis/       ← /ai:debug — Hypothesis test scripts + results
+├── guidelines/               ← Team guidelines
+└── workflows/                ← Team workflows
+
+.claude/cascades/             ← Auto-generated change log (gitignored)
+.claude/rules/                ← On-demand coding rules by stack
+```
 
 ## Aspect-Based Code Review
 
-Review the full codebase through a specific lens. Each aspect uses a dedicated prompt template with deep, language-specific expertise.
+Review the full codebase through a specific lens with deep, language-specific expertise.
 
 ```bash
 /ai:review security                        # Generic security audit
@@ -81,143 +127,146 @@ Review the full codebase through a specific lens. Each aspect uses a dedicated p
 /ai:review --base main                     # Diff-based review (no aspect)
 ```
 
-**Available aspects:** `security`, `performance`, `architecture`, `antipatterns`
+**Aspects:** `security`, `performance`, `architecture`, `antipatterns`
 
-**Supported stacks:**
+**28 prompt templates** across 3 languages (Python, TypeScript, Dart) and 5 techstacks (FastAPI, Django, Next.js, Flutter + generic).
 
-| Language | Base | Techstacks |
-|----------|------|------------|
-| Python | `python:security` | `python/fastapi:*`, `python/django:*` |
-| TypeScript | `typescript:security` | `typescript/nextjs:*` |
-| Dart | `dart:security` | `dart/flutter:*` |
+## Hypothesis Debugging
 
-When no aspect is given, `/ai:review` uses the native Codex diff-based review. When an aspect is specified, it reads the **full codebase** and applies a specialized prompt template.
+Structured debugging using the scientific method.
+
+```bash
+/ai:debug The API returns 500 with special characters
+/ai:debug --type performance The dashboard takes 8s to load
+/ai:debug --type flaky The registration test fails randomly in CI
+/ai:debug --type behavior Users see stale data after profile update
+```
+
+**Process:** Observe → Hypothesize → Test → Conclude
+
+- Claude agents explore the codebase for evidence
+- Generates 3-5 ranked hypotheses with testable predictions
+- Codex agents write and run test scripts (saved to `scripts/hypothesis/`)
+- Produces Mermaid decision tree with color-coded results
 
 ## Multi-Agent Council
 
-Multiple AI agents analyze the codebase independently, debate each other's findings, and a synthesis agent produces the final verdict.
+Multiple agents analyze independently, debate findings, and synthesize.
 
 ```bash
 /ai:council --roles security,performance Analyze the auth flow
 /ai:council --roles attacker,defender,judge Is our rate limiting sufficient?
-/ai:council --roles architecture,antipatterns --background
 ```
 
-**Discussion model:**
+**Roles:** `security`, `performance`, `architecture`, `antipatterns`, `attacker`, `defender`, `judge` (+ custom freeform)
 
-```
-Round 1 (parallel):  Agent A ──┐
-                     Agent B ──┼── independent codebase exploration
-                     Agent C ──┘
-                         │
-Round 2 (parallel):  Agent A ──┐
-                     Agent B ──┼── each sees all Round 1 findings, challenges/agrees/adds
-                     Agent C ──┘
-                         │
-Synthesis:           Judge ────── resolves disagreements, deduplicates, final verdict
-```
+**Model:** Round 1 (parallel exploration) → Round 2 (debate) → Synthesis
 
-**Predefined roles:** `security`, `performance`, `architecture`, `antipatterns`, `attacker`, `defender`, `judge`
-
-Custom freeform roles are also accepted. Default roles if `--roles` is omitted: `security,performance,architecture`. Maximum 7 roles.
-
-Total backend calls: `2 * N + 1` (3 roles = 7 calls).
-
-## Adversarial Review
-
-A steerable review that challenges the implementation approach and design choices.
+## Architecture Decision Records
 
 ```bash
-/ai:adversarial-review
-/ai:adversarial-review --base main challenge whether this caching design is right
-/ai:adversarial-review --background look for race conditions
+/ai:adr Should we use Redis or Memcached for caching?
+/ai:adr --scope api REST vs GraphQL for the mobile API
+/ai:adr --scope data Normalize orders table or use JSONB?
 ```
 
-## Task Delegation
+**Scopes:** `module`, `system`, `api`, `data`, `infra`
 
-Hand work to Codex through the rescue subagent.
+Outputs 3 Mermaid diagrams (current, proposed, comparison) + comparison table + implementation plan. Saved to `.claude/project/adr/ADR-{NN}-{slug}.md`.
+
+## Feature Development Records
 
 ```bash
-/ai:rescue investigate why the tests started failing
-/ai:rescue fix the failing test with the smallest safe patch
-/ai:rescue --resume apply the top fix from the last run
-/ai:rescue --model gpt-5.4-mini --effort medium investigate the flaky test
-/ai:rescue --background investigate the regression
+/ai:fdr Add multi-tenant session caching
+/ai:fdr --scope api Add rate limiting to the public API
+/ai:fdr --scope fullstack Add real-time notifications
 ```
 
-Supports `--model provider:model` (e.g., `codex:gpt-5.4`, `copilot:claude-opus-4.5`), `--effort level`, `--resume`, `--fresh`, `--background`, `--wait`.
+**Scopes:** `backend`, `frontend`, `fullstack`, `api`, `data`
 
-## Job Management
+Includes: edge case tables (input, concurrency, auth, scale), risk matrix, backward compatibility, testing strategy, rollout plan with Mermaid diagrams. Saved to `.claude/project/fdr/FDR-{NN}-{slug}.md`.
+
+## Implementation Plans
 
 ```bash
-/ai:status                    # Show all running and recent jobs
-/ai:status job-id             # Check a specific job
-/ai:result                    # Show latest finished job output
-/ai:result job-id             # Show specific job output
-/ai:cancel job-id             # Cancel an active job
+/ai:implement --from .claude/project/fdr/FDR-03-session-caching.md
+/ai:implement --from .claude/project/adr/ADR-05-redis.md --method tdd
+```
+
+**Methods:** `pragmatic` (default), `tdd`, `agile`, `kanban`, `shape-up`
+
+Produces DAG of tasks with dependencies, critical path, parallel tracks. Saved to `.claude/project/implementation_plans/IMPL-{NN}-{slug}.md`.
+
+## Task Tracking
+
+```bash
+/ai:todo                              # Kanban board view
+/ai:todo --from IMPL-03               # Generate from IMPL plan
+/ai:todo update T06 --status complete # Update status
+/ai:todo update T06 --ticket JIRA-125 # Link ticket
+/ai:todo --sync                       # Auto-sync from cascade
+```
+
+Pydantic-style YAML schema: status, priority, track, assignee, ticket, evidence (file:line), references (IMPL/FDR/ADR), tests, dependencies. Saved to `.claude/project/todos/TODO-{NN}-{slug}.yaml`.
+
+## Handoff Records
+
+```bash
+/ai:cascade                                # Analyze all cascade changes
+/ai:cascade Add session caching feature    # With context label
+/ai:cascade --since 2h                     # Last 2 hours only
+```
+
+Traces implementation back to ADR/FDR/IMPL. Includes task completion status, edge case coverage, risk mitigation evidence, file:line citations. Saved to `.claude/project/cascades/REC-{NN}-{slug}.md`.
+
+## Lint & Typecheck
+
+```bash
+/ai:lint                  # Lint files from cascade
+/ai:lint --all            # Lint entire project
+/ai:lint --fix            # Auto-fix safe issues
+```
+
+**Automatic Stop hook** — blocks Claude from stopping if lint errors found in changed files.
+
+**Tools:** ruff + pyright (Python), eslint + tsc (TypeScript). Production configs bundled.
+
+## Cascade Change Tracking
+
+PostToolUse + UserPromptSubmit hooks auto-log every change with timestamps and line locations:
+
+```markdown
+# Cascade: main
+
+## [09:20:15] User: Add multi-tenant session caching
+
+- [09:20:30] CREATE `services/cache_service.py`
+- [09:20:45] EDIT `api/views/users.py` L45-67
+- [09:21:02] EDIT `config/settings.py` L12
+
+## [09:25:00] User: Fix the failing test
+
+- [09:25:10] EDIT `services/cache_service.py` L23-25
+```
+
+## Mermaid Diagrams
+
+```bash
+/ai:mermaid validate graph TD; A-->B; B-->C
+/ai:mermaid render graph TD; A[Start]-->B{Decision}; B-->|Yes|C[End]
+/ai:mermaid render --format png -o docs/arch.png graph TD; A-->B
+/ai:setup --install-mermaid               # Install mmdc if needed
 ```
 
 ## Coding Rules
-
-The plugin bundles best-practice rules for Python/FastAPI/Django and TypeScript/Next.js. Install them into any project:
 
 ```bash
 /ai:setup --install-rules fastapi,nextjs
 ```
 
-Rules are copied to `.claude/rules/` and load **on-demand** when Claude reads matching files — zero context cost for unrelated work.
-
-**What's included:**
-
-| Stack | Rules |
-|-------|-------|
-| Python | security, performance, antipatterns, architecture |
-| FastAPI | security, performance, antipatterns + Python base |
-| Django | security, performance + Python base |
-| TypeScript | security, performance, antipatterns, architecture |
-| Next.js | security, performance, architecture, antipatterns + TypeScript base |
-
-## Cascade Change Tracking
-
-A PostToolUse hook automatically records every file edit, create, and removal to `.claude/cascades/{branch}.md`:
-
-```markdown
-# Cascade: main
-
-- EDIT `plugins/ai/scripts/ai-companion.mjs`
-- CREATE `plugins/ai/prompts/council/security.md`
-- EDIT `plugins/ai/scripts/lib/render.mjs`
-- REMOVE `old-file.js`
-```
-
-This provides a per-branch reference of what changed during a session.
+17 production-level rule files covering security, performance, architecture, antipatterns for Python/FastAPI/Django and TypeScript/Next.js. Load on-demand when Claude reads matching files.
 
 ## Setup & Configuration
-
-### Review Gate
-
-```bash
-/ai:setup --enable-review-gate
-/ai:setup --disable-review-gate
-```
-
-When enabled, a `Stop` hook runs a Codex review on Claude's recent changes before allowing the session to end.
-
-> **Warning:** The review gate can create long-running loops and drain usage limits.
-
-### Codex Configuration
-
-The plugin uses your existing Codex configuration:
-
-- **User-level:** `~/.codex/config.toml`
-- **Project-level:** `.codex/config.toml` (requires trusted project)
-
-Example — always use gpt-5.4-mini with high effort:
-
-```toml
-model = "gpt-5.4-mini"
-model_reasoning_effort = "xhigh"
-```
 
 ### Supported Backends
 
@@ -228,27 +277,44 @@ model_reasoning_effort = "xhigh"
 | Auth | `~/.codex/config.toml` | GitHub Copilot CLI |
 | Models | gpt-5.4, gpt-5.4-mini, gpt-5.3-codex-spark | Via Copilot CLI |
 
+### Codex Configuration
+
+```toml
+# ~/.codex/config.toml or .codex/config.toml
+model = "gpt-5.4-mini"
+model_reasoning_effort = "xhigh"
+```
+
+### Review Gate
+
+```bash
+/ai:setup --enable-review-gate    # Codex reviews Claude's work before stop
+/ai:setup --disable-review-gate
+```
+
+> **Warning:** Can create long-running loops and drain usage limits.
+
 ## FAQ
 
 ### Do I need a separate Codex account?
 
-If you're already signed into Codex on this machine, it works immediately. This plugin uses your local Codex CLI authentication. If you haven't used Codex yet, run `/ai:setup` to check readiness and `!codex login` to authenticate.
-
-### Does the plugin modify my code?
-
-Reviews (`/ai:review`, `/ai:adversarial-review`, `/ai:council`) are **read-only**. Only `/ai:rescue` can make changes, and it defaults to write-capable mode (use `--no-write` for read-only).
-
-### Can I resume work in Codex?
-
-Yes. `/ai:result` includes the Codex session ID. Run `codex resume <session-id>` to continue in Codex directly.
+If you're already signed into Codex, it works immediately. Run `/ai:setup` to check, `!codex login` to authenticate.
 
 ### Can I use Copilot instead of Codex?
 
-Yes. The plugin supports both backends. Use `--model copilot:model-name` on any command, or set Copilot as default via `/ai:setup --provider copilot`. Copilot uses task-based review (no native review mode), so all reviews go through prompt templates.
+Yes. Use `--model copilot:model-name` on any command, or `/ai:setup --provider copilot`.
 
-### What's the difference from the original plugin?
+### Does the plugin modify my code?
 
-This fork adds aspect-based reviews (28 prompt templates for 3 languages + 5 techstacks), multi-agent council (parallel discussion + debate + synthesis), auto-installable coding rules, cascade change tracking, and dual backend support (Codex + Copilot). The original only supports diff-based reviews with no language or aspect awareness.
+Reviews, council, debug, ADR, FDR are **read-only**. Only `/ai:rescue` can make changes. `/ai:lint --fix` auto-fixes safe issues.
+
+### Can I resume work in Codex?
+
+Yes. `/ai:result` includes the Codex session ID. Run `codex resume <session-id>`.
+
+### What's the difference from the original?
+
+This fork adds 16 commands (vs 7), aspect-based reviews (28 templates, 3 languages, 5 techstacks), multi-agent council, hypothesis debugging, ADR/FDR/IMPL/TODO document flow, cascade tracking with timestamps, batch lint on Stop, Mermaid rendering, and coding rules. The original only supports diff-based reviews.
 
 ## License
 
