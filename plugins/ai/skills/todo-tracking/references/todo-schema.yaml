@@ -1,0 +1,152 @@
+# TODO YAML Schema
+# All TODO files must conform to this structure.
+# Equivalent to a Pydantic model definition.
+
+# --- Root ---
+# metadata: TodoMetadata (required)
+# tasks: list[TodoTask] (required)
+
+# --- TodoMetadata ---
+# id: str                    # e.g., "TODO-03"
+# title: str                 # e.g., "Session Caching Implementation"
+# source_impl: str | null    # e.g., "IMPL-03-session-caching.md"
+# source_fdr: str | null     # e.g., "FDR-03-session-caching.md"
+# source_adr: str | null     # e.g., "ADR-05-redis.md"
+# created: date              # e.g., 2026-04-09
+# updated: datetime          # e.g., 2026-04-09T12:30:00Z
+
+# --- TodoTask ---
+# id: str                    # e.g., "T06"
+# title: str                 # e.g., "Implement service layer"
+# status: Status             # pending | in-progress | complete | blocked | cancelled
+# priority: Priority         # P0 | P1 | P2
+# track: str                 # foundation | core | testing | hardening | observability | rollout
+# assignee: str | null       # e.g., "@nhan"
+# ticket: str | null         # e.g., "JIRA-125" or "GH-42"
+# effort: str | null         # e.g., "1.5d"
+# progress: int | null       # 0-100 percentage (for in-progress tasks)
+# started_at: datetime | null
+# completed_at: datetime | null
+# depends_on: list[str]      # task IDs, e.g., ["T04", "T05"]
+# blocked_by: list[str]      # task IDs currently blocking this task
+# evidence: list[Evidence]
+# references: list[Reference]
+# tests: list[TestCoverage]
+# notes: str | null
+
+# --- Evidence ---
+# file: str                  # e.g., "services/cache_service.py"
+# line: str | int            # e.g., "1-78" or 42
+# action: str                # created | edited | removed
+
+# --- Reference ---
+# type: str                  # impl_task | fdr_edge_case | fdr_risk | adr_decision
+# ref: str                   # e.g., "T06" or "E5" or "R1"
+# status: str                # handled | pending | not_applicable
+
+# --- TestCoverage ---
+# name: str                  # e.g., "test_cache_create"
+# file: str                  # e.g., "tests/test_cache.py:12"
+# status: str                # passing | failing | skipped | not_written
+
+# --- Status (enum) ---
+# Valid values: pending, in-progress, complete, blocked, cancelled
+# Valid transitions:
+#   pending → in-progress
+#   pending → cancelled
+#   in-progress → complete
+#   in-progress → blocked
+#   blocked → in-progress (when blocker resolved)
+#   any → blocked (external dependency)
+
+# --- Priority (enum) ---
+# P0: Must do — blocks release
+# P1: Should do — important but not blocking
+# P2: Nice to have — do if time permits
+
+# === Example ===
+metadata:
+  id: TODO-03
+  title: Session Caching Implementation
+  source_impl: IMPL-03-session-caching.md
+  source_fdr: FDR-03-session-caching.md
+  source_adr: ADR-05-redis.md
+  created: 2026-04-09
+  updated: 2026-04-09T12:30:00Z
+
+tasks:
+  - id: T02
+    title: DB migration
+    status: complete
+    priority: P0
+    track: foundation
+    assignee: "@nhan"
+    ticket: "JIRA-123"
+    effort: "1d"
+    started_at: "2026-04-09T09:00:00Z"
+    completed_at: "2026-04-09T09:30:00Z"
+    depends_on: []
+    blocked_by: []
+    evidence:
+      - file: "migrations/0042_add_cache.py"
+        line: 1
+        action: created
+    references:
+      - type: impl_task
+        ref: "T02"
+        status: handled
+    tests: []
+    notes: "Migration runs cleanly, rollback tested"
+
+  - id: T06
+    title: Service layer
+    status: in-progress
+    priority: P0
+    track: core
+    assignee: "@nhan"
+    ticket: "JIRA-125"
+    effort: "1.5d"
+    progress: 60
+    started_at: "2026-04-09T10:00:00Z"
+    depends_on: ["T04"]
+    blocked_by: []
+    evidence:
+      - file: "services/cache_service.py"
+        line: "1-78"
+        action: created
+    references:
+      - type: impl_task
+        ref: "T06"
+        status: handled
+      - type: fdr_edge_case
+        ref: "E5"
+        status: handled
+      - type: fdr_edge_case
+        ref: "E6"
+        status: pending
+      - type: fdr_risk
+        ref: "R1"
+        status: pending
+    tests:
+      - name: test_cache_create
+        file: "tests/test_cache.py:12"
+        status: passing
+      - name: test_cache_idempotent
+        file: "tests/test_cache.py:47"
+        status: failing
+    notes: "Idempotency done, optimistic locking still needed"
+
+  - id: T10
+    title: Add metrics
+    status: pending
+    priority: P1
+    track: observability
+    effort: "0.5d"
+    depends_on: ["T08"]
+    blocked_by: ["T08"]
+    evidence: []
+    references:
+      - type: impl_task
+        ref: "T10"
+        status: pending
+    tests: []

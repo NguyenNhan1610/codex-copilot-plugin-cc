@@ -349,6 +349,7 @@ function handleSetup(argv, backend) {
       ".claude/project/implementation_plans",
       ".claude/project/cascades",
       ".claude/project/scripts/hypothesis",
+      ".claude/project/todos",
       ".claude/project/guidelines",
       ".claude/project/workflows",
       ".claude/cascades"
@@ -373,11 +374,12 @@ ${marker}
 - \`.claude/project/fdr/\` — Feature Development Records (FDR-XX-{slug}.md)
 - \`.claude/project/implementation_plans/\` — DAG task plans (IMPL-XX-{slug}.md)
 - \`.claude/project/cascades/\` — Implementation records with traceability (REC-XX-{slug}.md)
+- \`.claude/project/todos/\` — Task tracking with status + tickets (TODO-XX-{slug}.yaml)
 - \`.claude/project/scripts/hypothesis/\` — Hypothesis test scripts (H{NN}_{slug}.py + _result.json)
 - \`.claude/cascades/\` — Auto-generated change log (timestamps + file:line, gitignored)
 - \`.claude/rules/\` — On-demand coding rules by stack (install via /ai:setup --install-rules)
 
-Document flow: ADR → FDR → IMPL → code → /ai:cascade (traces back to all)
+Document flow: ADR → FDR → IMPL → TODO → code → test → lint → cascade → review
 `;
 
     const existingContent = fs.existsSync(claudeMdPath) ? fs.readFileSync(claudeMdPath, "utf8") : "";

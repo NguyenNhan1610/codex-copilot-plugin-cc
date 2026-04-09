@@ -31,6 +31,7 @@ A high-quality fork of [openai/codex-plugin-cc](https://github.com/openai/codex-
 | `/ai:adr` | Architecture Decision Records with Mermaid diagrams |
 | `/ai:fdr` | Feature Development Records with edge cases and risk assessment |
 | `/ai:implement` | DAG-based implementation plans from FDR/ADR documents |
+| `/ai:todo` | Task tracking with status, tickets, and traceability |
 | `/ai:cascade` | Handoff records with traceability to ADR/FDR/IMPL |
 | `/ai:lint` | Batch lint/typecheck (ruff, pyright, eslint, tsc) |
 | `/ai:mermaid` | Validate and render Mermaid.js diagrams |

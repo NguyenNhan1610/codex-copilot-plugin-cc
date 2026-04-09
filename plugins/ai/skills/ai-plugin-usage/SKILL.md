@@ -26,6 +26,7 @@ Use Codex or GitHub Copilot from inside Claude Code for code reviews, multi-agen
 | Plan a feature with risk assessment | `/ai:fdr Add multi-tenant session caching` |
 | Generate implementation checklist | `/ai:implement --from .claude/project/fdr/FDR-03.md` |
 | Document what was built (handoff) | `/ai:cascade Add session caching` |
+| Track task progress | `/ai:todo` or `/ai:todo --from IMPL-03` |
 | Lint/typecheck changed files | `/ai:lint` or `/ai:lint --fix` |
 | Render a diagram | `/ai:mermaid render graph TD; A-->B` |
 | Validate diagram syntax | `/ai:mermaid validate graph TD; A-->B` |
@@ -179,6 +180,23 @@ Convert an FDR or ADR into a DAG of implementation tasks with dependencies, crit
 Methods: `pragmatic` (default), `tdd`, `agile`, `kanban`, `shape-up`
 
 Outputs: Task DAG with Mermaid diagram, critical path, parallel tracks, per-task details with files and effort estimates, risk mitigation traceability. Saved to `.claude/project/implementation_plans/`.
+
+### Task Tracking
+
+#### `/ai:todo` — Structured Task Tracking
+
+Track implementation tasks with status, tickets, evidence, and traceability.
+
+```bash
+/ai:todo                              # Show Kanban board
+/ai:todo --from IMPL-03               # Generate from IMPL plan
+/ai:todo update T06 --status complete # Update status
+/ai:todo update T06 --ticket JIRA-125 # Link ticket
+/ai:todo --sync                       # Auto-sync from cascade
+```
+
+Statuses: `pending`, `in-progress`, `complete`, `blocked`, `cancelled`
+Saves to `.claude/project/todos/TODO-{NN}-{slug}.yaml`
 
 ### Handoff Recording
 
