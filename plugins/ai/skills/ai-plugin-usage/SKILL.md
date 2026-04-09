@@ -26,6 +26,7 @@ Use Codex or GitHub Copilot from inside Claude Code for code reviews, multi-agen
 | Plan a feature with risk assessment | `/ai:fdr Add multi-tenant session caching` |
 | Generate implementation checklist | `/ai:implement --from .claude/project/fdr/FDR-03.md` |
 | Document what was built (handoff) | `/ai:cascade Add session caching` |
+| Lint/typecheck changed files | `/ai:lint` or `/ai:lint --fix` |
 | Render a diagram | `/ai:mermaid render graph TD; A-->B` |
 | Validate diagram syntax | `/ai:mermaid validate graph TD; A-->B` |
 | Install coding rules | `/ai:setup --install-rules fastapi,nextjs` |

@@ -1,0 +1,55 @@
+# Production ruff config for Python projects
+# Covers: errors, pyflakes, isort, bugbear, security, type-checking
+
+[lint]
+select = [
+  "E",      # pycodestyle errors
+  "F",      # pyflakes
+  "W",      # pycodestyle warnings
+  "I",      # isort
+  "N",      # pep8-naming
+  "B",      # flake8-bugbear
+  "S",      # flake8-bandit (security)
+  "A",      # flake8-builtins
+  "C4",     # flake8-comprehensions
+  "DTZ",    # flake8-datetimez
+  "T10",    # flake8-debugger
+  "ISC",    # flake8-implicit-str-concat
+  "PIE",    # flake8-pie
+  "PT",     # flake8-pytest-style
+  "RSE",    # flake8-raise
+  "RET",    # flake8-return
+  "SIM",    # flake8-simplify
+  "TID",    # flake8-tidy-imports
+  "TCH",    # flake8-type-checking
+  "ARG",    # flake8-unused-arguments
+  "ERA",    # eradicate (commented-out code)
+  "PL",     # pylint
+  "PERF",   # perflint
+  "RUF",    # ruff-specific rules
+]
+ignore = [
+  "E501",   # line too long (handled by formatter)
+  "S101",   # assert usage (fine in tests)
+  "PLR0913", # too many arguments (pragmatic limit)
+  "PLR2004", # magic values (too noisy)
+  "B008",   # function calls in defaults (Depends() in FastAPI)
+]
+
+[lint.per-file-ignores]
+"tests/**" = ["S101", "ARG001", "ARG002", "PLR2004"]
+"migrations/**" = ["E501"]
+"conftest.py" = ["ARG001"]
+
+[lint.isort]
+known-first-party = []
+force-single-line = false
+lines-after-imports = 2
+
+[format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+target-version = "py311"
+line-length = 120
