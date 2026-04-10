@@ -11,12 +11,14 @@ import { getBackend, registerBackend } from "./lib/backend.mjs";
 import { loadPluginConfig, resolveProviderAndModel } from "./lib/config.mjs";
 import { createCodexBackend } from "./lib/codex/index.mjs";
 import { createCopilotBackend } from "./lib/copilot/index.mjs";
+import { createClaudeBackend } from "./lib/claude/index.mjs";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 
 // Register available backends at startup
 registerBackend(createCodexBackend());
 registerBackend(createCopilotBackend());
+registerBackend(createClaudeBackend());
 import { readStdinIfPiped } from "./lib/fs.mjs";
 import { collectReviewContext, collectFullCodebaseContext, ensureGitRepository, resolveReviewTarget } from "./lib/git.mjs";
 import { binaryAvailable, terminateProcessTree } from "./lib/process.mjs";
@@ -72,7 +74,7 @@ function printUsage() {
   console.log(
     [
       "Usage:",
-      "  node scripts/ai-companion.mjs setup [--provider <codex|copilot>] [--enable-review-gate|--disable-review-gate] [--json]",
+      "  node scripts/ai-companion.mjs setup [--provider <codex|copilot|claude>] [--enable-review-gate|--disable-review-gate] [--json]",
       "  node scripts/ai-companion.mjs review [--model <provider:model>] [--wait|--background] [--base <ref>] [--scope <auto|working-tree|branch>] [language[/techstack]:aspect]",
       "  node scripts/ai-companion.mjs adversarial-review [--model <provider:model>] [--wait|--background] [--base <ref>] [--scope <auto|working-tree|branch>] [focus text]",
       "  node scripts/ai-companion.mjs council [--model <provider:model>] [--roles <role1,role2,...>] [topic text]",
@@ -81,7 +83,7 @@ function printUsage() {
       "  node scripts/ai-companion.mjs result [job-id] [--json]",
       "  node scripts/ai-companion.mjs cancel [job-id] [--json]",
       "",
-      "Model format: --model <provider>:<model>  (e.g., codex:gpt-5.4, copilot:claude-opus-4.5)",
+      "Model format: --model <provider>:<model>  (e.g., codex:gpt-5.4, copilot:claude-opus-4.5, claude:code)",
       "             --model <model>              (uses default provider from config)"
     ].join("\n")
   );
@@ -179,11 +181,27 @@ function buildSetupReport(cwd, backend, actionsTaken = []) {
 
   const nextSteps = [];
   if (!codexStatus.available) {
-    nextSteps.push("Install Codex with `npm install -g @openai/codex`.");
+    if (backend.name === "codex") {
+      nextSteps.push("Install Codex with `npm install -g @openai/codex`.");
+    } else if (backend.name === "copilot") {
+      nextSteps.push("Install Copilot CLI from https://docs.github.com/copilot/how-tos/copilot-cli.");
+    } else if (backend.name === "claude") {
+      nextSteps.push("Install Claude Code from https://claude.com/claude-code.");
+    } else {
+      nextSteps.push(`Install the ${backend.displayName || backend.name} CLI and retry.`);
+    }
   }
   if (codexStatus.available && !authStatus.loggedIn) {
-    nextSteps.push("Run `!codex login`.");
-    nextSteps.push("If browser login is blocked, retry with `!codex login --device-auth` or `!codex login --with-api-key`.");
+    if (backend.name === "codex") {
+      nextSteps.push("Run `!codex login`.");
+      nextSteps.push("If browser login is blocked, retry with `!codex login --device-auth` or `!codex login --with-api-key`.");
+    } else if (backend.name === "copilot") {
+      nextSteps.push("Run `!copilot login`.");
+    } else if (backend.name === "claude") {
+      nextSteps.push("Launch `!claude` interactively once to sign in; credentials are stored in ~/.claude.");
+    } else {
+      nextSteps.push(`Authenticate the ${backend.displayName || backend.name} CLI and retry.`);
+    }
   }
   if (!mmdcStatus.available) {
     nextSteps.push("Optional: run `/ai:setup --install-mermaid` to enable diagram rendering.");

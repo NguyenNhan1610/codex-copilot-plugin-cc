@@ -5,7 +5,7 @@ allowed-tools: Read, Glob, Grep, Bash(node:*), Bash(git:*), AskUserQuestion
 ---
 
 Run an AI code review through the shared plugin runtime.
-The provider (Codex, Copilot, etc.) is selected via `--model provider:model` or the default from config.
+The provider (Codex, Copilot, Claude) is selected via `--model provider:model` or the default from config. For Claude, the tier aliases are `claude:fast` (Haiku, cheap and quick), `claude:code` (Sonnet, the default for code review), and `claude:max` (Opus with 1M context, strongest).
 
 Raw slash-command arguments:
 `$ARGUMENTS`
