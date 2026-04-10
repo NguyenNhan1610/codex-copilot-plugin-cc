@@ -7,7 +7,7 @@ set -euo pipefail
 
 input=$(cat)
 
-user_prompt=$(echo "$input" | jq -r '.user_prompt // empty')
+user_prompt=$(echo "$input" | jq -r '.prompt // .user_prompt // empty')
 cwd=$(echo "$input" | jq -r '.cwd // empty')
 
 [ -z "$user_prompt" ] && { echo '{}'; exit 0; }

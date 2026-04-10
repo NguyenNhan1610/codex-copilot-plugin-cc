@@ -29,7 +29,7 @@ payload=$(echo "$input" | jq -c \
     input: (.tool_input // null),
     output: (.tool_result // null),
     signal: (.signal // null),
-    message: (.user_prompt // .message // null),
+    message: (.prompt // .user_prompt // .message // null),
     blocked: (.blocked // false),
     meta: {
       hook_event: $type,
