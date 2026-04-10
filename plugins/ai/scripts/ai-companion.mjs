@@ -388,7 +388,21 @@ ${marker}
 - \`.claude/cascades/\` — Auto-generated change log (timestamps + file:line, gitignored)
 - \`.claude/rules/\` — On-demand coding rules by stack (install via /ai:setup --install-rules)
 
-Document flow: ADR → FDR → IMPL → TODO → code → test → lint → cascade → review
+## AI Companion Workflow
+
+Core loop (ADR → FDR → IMPL → TODO → code → test → lint → cascade → review):
+
+1. \`/ai:adr\` — record architecture decisions with trade-offs and diagrams
+2. \`/ai:fdr\` — plan a feature with edge cases, risks, and impact analysis
+3. \`/ai:implement\` — turn an FDR/ADR into a DAG task plan with critical path
+4. \`/ai:todo\` — track tasks with status, tickets, and evidence links
+5. Write code and tests; use \`.claude/project/scripts/hypothesis/\` for investigative scripts
+6. \`/ai:lint\` — batch lint/typecheck files changed in this segment
+7. \`/ai:cascade\` — turn the change log into an implementation record with traceability
+8. \`/ai:review\` or \`/ai:adversarial-review\` — AI code review against local git state
+9. \`/ai:trace\` — verify decisions, plans, tasks, code, and tests all line up before shipping
+
+Support commands: \`/ai:debug\` (hypothesis-based debugging) · \`/ai:council\` (multi-agent discussion) · \`/ai:knowledge\` (capture/search lessons) · \`/ai:rescue\` (delegate to AI subagent) · \`/ai:status\` · \`/ai:mermaid\` · \`/ai:setup\`
 `;
 
     const existingContent = fs.existsSync(claudeMdPath) ? fs.readFileSync(claudeMdPath, "utf8") : "";
