@@ -183,7 +183,7 @@ export function renderSetupReport(report) {
     "Checks:",
     `- node: ${report.node.detail}`,
     `- npm: ${report.npm.detail}`,
-    `- ${report.backendLabel || "ai agent"}: ${(report.aiAgent || report.codex)?.detail ?? "unknown"}`,
+    `- ${report.backendLabel || "ai agent"}: ${report.aiAgent?.detail ?? "unknown"}`,
     `- auth: ${report.auth.detail}`,
     `- mmdc: ${report.mmdc?.available ? report.mmdc.detail : "not installed (run /ai:setup --install-mermaid)"}`,
     `- session runtime: ${report.sessionRuntime.label}`,
@@ -402,7 +402,6 @@ export function renderStoredJobResult(job, storedJob) {
   const rawOutput =
     (typeof storedJob?.result?.rawOutput === "string" && storedJob.result.rawOutput) ||
     (typeof storedJob?.result?.aiAgent?.stdout === "string" && storedJob.result.aiAgent.stdout) ||
-    (typeof storedJob?.result?.codex?.stdout === "string" && storedJob.result.codex.stdout) ||
     "";
   if (rawOutput) {
     const output = rawOutput.endsWith("\n") ? rawOutput : `${rawOutput}\n`;
