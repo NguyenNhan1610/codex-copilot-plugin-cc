@@ -173,14 +173,14 @@ function buildSetupReport(cwd, backend, actionsTaken = []) {
   const workspaceRoot = resolveWorkspaceRoot(cwd);
   const nodeStatus = binaryAvailable("node", ["--version"], { cwd });
   const npmStatus = binaryAvailable("npm", ["--version"], { cwd });
-  const codexStatus = backend.getAvailability(cwd);
+  const backendStatus = backend.getAvailability(cwd);
   const authStatus = backend.getLoginStatus(cwd);
   const config = getConfig(workspaceRoot);
 
   const mmdcStatus = binaryAvailable("mmdc", ["--version"], { cwd });
 
   const nextSteps = [];
-  if (!codexStatus.available) {
+  if (!backendStatus.available) {
     if (backend.name === "codex") {
       nextSteps.push("Install Codex with `npm install -g @openai/codex`.");
     } else if (backend.name === "copilot") {
@@ -191,7 +191,7 @@ function buildSetupReport(cwd, backend, actionsTaken = []) {
       nextSteps.push(`Install the ${backend.displayName || backend.name} CLI and retry.`);
     }
   }
-  if (codexStatus.available && !authStatus.loggedIn) {
+  if (backendStatus.available && !authStatus.loggedIn) {
     if (backend.name === "codex") {
       nextSteps.push("Run `!codex login`.");
       nextSteps.push("If browser login is blocked, retry with `!codex login --device-auth` or `!codex login --with-api-key`.");
@@ -211,10 +211,12 @@ function buildSetupReport(cwd, backend, actionsTaken = []) {
   }
 
   return {
-    ready: nodeStatus.available && codexStatus.available && authStatus.loggedIn,
+    ready: nodeStatus.available && backendStatus.available && authStatus.loggedIn,
     node: nodeStatus,
     npm: npmStatus,
-    codex: codexStatus,
+    backendName: backend.name,
+    backendLabel: backend.displayName || backend.name,
+    aiAgent: backendStatus,
     auth: authStatus,
     mmdc: mmdcStatus,
     sessionRuntime: backend.getSessionRuntimeStatus(),
@@ -849,7 +851,7 @@ async function executeReviewRun(request, backend) {
       target,
       threadId: result.threadId,
       sourceThreadId: result.sourceThreadId,
-      codex: {
+      aiAgent: {
         status: result.status,
         stderr: result.stderr,
         stdout: result.reviewText,
@@ -909,7 +911,7 @@ async function executeReviewRun(request, backend) {
       branch: context.branch,
       summary: context.summary
     },
-    codex: {
+    aiAgent: {
       status: result.status,
       stderr: result.stderr,
       stdout: result.finalMessage,
