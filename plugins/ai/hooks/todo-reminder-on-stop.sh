@@ -121,6 +121,6 @@ Action required:
 
 When you have finished reconciling (or confirmed no updates are needed), stop normally."
 
-payload=$(jq -n --arg msg "$reminder" '{continue: false, systemMessage: $msg}')
+payload=$(jq -n --arg reason "$reminder" '{decision: "block", reason: $reason}')
 echo "$payload"
-exit 2
+exit 0

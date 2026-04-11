@@ -177,7 +177,7 @@ fi
 
 # No errors = allow stop
 if [ -z "$errors" ]; then
-  echo '{"continue": true}'
+  echo '{}'
   exit 0
 fi
 
@@ -192,7 +192,7 @@ report+="$errors"
 report+="Fix the errors above before stopping. Run \`/ai:lint\` for the full report."
 
 # Hard cap total message size to stay well under Claude Code's hook output limit (~16KB).
-# systemMessage gets JSON-escaped, so keep raw payload under ~10KB.
+# The reason field gets JSON-escaped, so keep the raw payload under ~10KB.
 rendered=$(echo -e "$report")
 max_bytes=10000
 if [ "${#rendered}" -gt "$max_bytes" ]; then
@@ -201,6 +201,6 @@ if [ "${#rendered}" -gt "$max_bytes" ]; then
 ... (report truncated; run \`/ai:lint\` for the full output)"
 fi
 
-# Output as systemMessage to Claude
-echo "{\"continue\": false, \"systemMessage\": \"$(printf '%s' "$rendered" | sed 's/\\/\\\\/g; s/"/\\"/g' | tr '\n' ' ')\"}"
-exit 2
+# Return a Stop-hook block decision with the reason for Claude to read.
+jq -n --arg reason "$rendered" '{decision: "block", reason: $reason}'
+exit 0
