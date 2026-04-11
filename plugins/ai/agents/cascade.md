@@ -21,11 +21,12 @@ You are a cascade recording agent. You analyze raw change logs and produce struc
 1. Read `.claude/cascades/{branch}.md` — the raw timestamped change log
 2. Parse entries: timestamp, action, file path, line locations
 3. Parse session segments with signal tags:
-   - `## [HH:MM:SS] [NEW] User: ...` — new request
-   - `## [HH:MM:SS] [REVISION] User: ...` — user dissatisfied, requested change
-   - `## [HH:MM:SS] [ACCEPTED] User: ...` — user satisfied with result
-   - `## [HH:MM:SS] [CONTINUE] User: ...` — continuation of previous work
-   - `## [HH:MM:SS] [QUESTION] User: ...` — user asked a question
+   - `## [HH:MM:SS] [NEW]` — new request
+   - `## [HH:MM:SS] [REVISION]` — user dissatisfied, requested change
+   - `## [HH:MM:SS] [ACCEPTED]` — user satisfied with result
+   - `## [HH:MM:SS] [CONTINUE]` — continuation of previous work
+   - `## [HH:MM:SS] [QUESTION]` — user asked a question
+   - The full user prompt text follows on the next lines as a `>` blockquote — that is where the actual request body lives.
 4. Parse full prompt text from blockquotes (`> ...`) under each segment header
 5. Detect `[INCOMPLETE]` segments: the LAST segment in the cascade that has a user prompt but NO file edits after it — mark as incomplete work
 6. If `--since` flag present, filter by timestamp
@@ -103,7 +104,7 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" render -o ".claude/proje
 - Every file:line citation must be verified by reading the actual file — no guessing.
 - Traceability is required — always scan `.claude/project/` for related documents.
 - If no FDR/ADR/IMPL exists, note "No planning documents found" in Traceability section.
-- Group changes by session segments (from `## [HH:MM:SS] User:` separators).
+- Group changes by session segments (from `## [HH:MM:SS] [TAG]` separators).
 - Known gaps must be specific: what's missing, what document references it, what's the priority.
 - Do NOT implement or fix anything. Only document what was done.
 - Always validate Mermaid syntax before rendering.

@@ -34,19 +34,21 @@ case "$tool_name" in
   Edit)
     file_path=$(echo "$input" | jq -r '.tool_input.file_path // empty')
     action="EDIT"
-    # Try to find line number from old_string
-    # Extract old_string to a temp file to preserve multi-line content
-    old_string_file=$(mktemp)
-    echo "$input" | jq -r '.tool_input.old_string // empty' > "$old_string_file"
-    if [ -s "$old_string_file" ] && [ -n "$file_path" ] && [ -f "$file_path" ]; then
-      # Count lines in old_string
-      line_count=$(wc -l < "$old_string_file")
-      # Add 1 if file doesn't end with newline (wc -l undercounts)
-      [ -n "$(tail -c 1 "$old_string_file")" ] && line_count=$((line_count + 1))
-      # Get first line for grep matching
-      first_line=$(head -1 "$old_string_file")
+    # Compute line info by locating the first line of new_string in the
+    # post-edit file. PostToolUse fires AFTER the edit, so old_string has
+    # been replaced and is no longer in the file — searching for old_string
+    # silently fails. new_string was just written, so it's guaranteed to
+    # be present (modulo collisions with pre-existing identical content,
+    # in which case grep picks the earliest match, which is still usually
+    # the edit site).
+    new_string_file=$(mktemp)
+    echo "$input" | jq -r '.tool_input.new_string // empty' > "$new_string_file"
+    if [ -s "$new_string_file" ] && [ -n "$file_path" ] && [ -f "$file_path" ]; then
+      line_count=$(wc -l < "$new_string_file")
+      [ -n "$(tail -c 1 "$new_string_file")" ] && line_count=$((line_count + 1))
+      first_line=$(head -1 "$new_string_file")
       if [ -n "$first_line" ]; then
-        line_start=$(grep -nF "$first_line" "$file_path" 2>/dev/null | head -1 | cut -d: -f1 || true)
+        line_start=$(grep -nF -- "$first_line" "$file_path" 2>/dev/null | head -1 | cut -d: -f1 || true)
         if [ -n "$line_start" ]; then
           line_end=$((line_start + line_count - 1))
           if [ "$line_start" -eq "$line_end" ]; then
@@ -57,15 +59,42 @@ case "$tool_name" in
         fi
       fi
     fi
-    rm -f "$old_string_file"
+    rm -f "$new_string_file"
     ;;
   MultiEdit)
     file_path=$(echo "$input" | jq -r '.tool_input.file_path // empty')
     action="EDIT"
+    # For MultiEdit, locate the first edit's new_string in the post-edit
+    # file. The report uses a trailing + to signal multiple edits: L123+
+    new_string_file=$(mktemp)
+    echo "$input" | jq -r '.tool_input.edits[0].new_string // empty' > "$new_string_file"
+    if [ -s "$new_string_file" ] && [ -n "$file_path" ] && [ -f "$file_path" ]; then
+      first_line=$(head -1 "$new_string_file")
+      if [ -n "$first_line" ]; then
+        line_start=$(grep -nF -- "$first_line" "$file_path" 2>/dev/null | head -1 | cut -d: -f1 || true)
+        if [ -n "$line_start" ]; then
+          edit_count=$(echo "$input" | jq -r '(.tool_input.edits // []) | length')
+          if [ "${edit_count:-0}" -gt 1 ]; then
+            line_info=" L${line_start}+"
+          else
+            line_info=" L${line_start}"
+          fi
+        fi
+      fi
+    fi
+    rm -f "$new_string_file"
     ;;
   Write)
     file_path=$(echo "$input" | jq -r '.tool_input.file_path // empty')
     action="CREATE"
+    if [ -n "$file_path" ] && [ -f "$file_path" ]; then
+      total_lines=$(wc -l < "$file_path" 2>/dev/null || echo 0)
+      # wc -l undercounts if the file has no trailing newline
+      [ -n "$(tail -c 1 "$file_path" 2>/dev/null)" ] && total_lines=$((total_lines + 1))
+      if [ "${total_lines:-0}" -gt 0 ]; then
+        line_info=" L1-${total_lines}"
+      fi
+    fi
     ;;
   Bash)
     cmd=$(echo "$input" | jq -r '.tool_input.command // empty')

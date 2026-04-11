@@ -45,10 +45,6 @@ cascade_file="$cascade_dir/$safe_branch.md"
 
 ts=$(date '+%H:%M:%S')
 
-# Truncate for header line (first line, max 120 chars)
-truncated=$(echo "$user_prompt" | head -1 | cut -c1-120)
-[ ${#user_prompt} -gt 120 ] && truncated="${truncated}..."
-
 # Ensure cascade directory exists
 mkdir -p "$cascade_dir"
 
@@ -57,9 +53,10 @@ if [ ! -f "$cascade_file" ]; then
   echo "# Cascade: $branch" > "$cascade_file"
 fi
 
-# Append prompt separator with tag
+# Append the session separator. Header is just timestamp + tag — the full
+# prompt text lives in the blockquote below, so we don't duplicate it here.
 echo "" >> "$cascade_file"
-echo "## [$ts] $tag User: $truncated" >> "$cascade_file"
+echo "## [$ts] $tag" >> "$cascade_file"
 
 # Append full prompt as blockquote (for handoff analysis)
 echo "" >> "$cascade_file"

@@ -29,7 +29,7 @@ cascade_file="$cwd/.claude/cascades/$safe_branch.md"
 # No cascade = nothing to check
 [ ! -f "$cascade_file" ] && { echo '{}'; exit 0; }
 
-# Extract unique file paths from the last session segment (after last ## User: separator)
+# Extract unique file paths from the last session segment (after last ## [ separator)
 # Get content after the last "## [" header
 last_segment=$(tac "$cascade_file" | sed '/^## \[/q' | tac)
 

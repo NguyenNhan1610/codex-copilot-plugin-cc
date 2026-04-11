@@ -69,7 +69,7 @@
 
 ## Session Timeline
 
-### [{HH:MM}] [{TAG}] {User prompt text}
+### [{HH:MM}] [{TAG}]
 
 > {Full prompt text from blockquote — the user's exact words}
 
