@@ -28,17 +28,23 @@ Each task has:
 - **evidence**: file:line citations proving completion
 - **references**: links to IMPL tasks, FDR edge cases, FDR risks
 - **tests**: test coverage with pass/fail status
+- **acceptance_criteria**: EAC IDs this task must satisfy (from IMPL)
 - **ticket**: external issue tracker link (JIRA, GitHub, Linear)
 - **depends_on / blocked_by**: task dependency tracking
+
+Top-level **acceptance_trace** block tracks verification status of:
+- **aac**: Architectural Acceptance Criteria (from ADR, empty if no ADR)
+- **fac**: Feature Acceptance Criteria (from FDR)
+- **eac**: Engineering Acceptance Criteria (from IMPL)
 
 ## Document Flow
 
 ```
-IMPL (task DAG) → /ai:todo --from IMPL-03 → TODO (live tracking)
-                                                ↓
-code changes → cascade log → /ai:todo --sync → auto-update status
-                                                ↓
-                                          /ai:todo board → Kanban view
+IMPL (task DAG + EAC) + TP (test cases) → /ai:todo --from IMPL-03 → TODO (live tracking + acceptance_trace)
+                                                                       ↓
+code changes → cascade log → /ai:todo --sync → auto-update status + reconcile EAC/FAC/AAC
+                                                                       ↓
+                                                                 /ai:todo board → Kanban view
 ```
 
 ## Files

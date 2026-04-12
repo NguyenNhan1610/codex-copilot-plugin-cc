@@ -1,5 +1,5 @@
 ---
-name: adr
+name: architecture-decision-record
 description: Generate deep technical Architecture Decision Records with Mermaid diagrams. Use when the user wants to document an architecture decision, compare design alternatives, or create technical decision documentation with visual diagrams.
 tools: Read, Glob, Grep, Bash, Agent
 skills:
@@ -24,6 +24,9 @@ Understand the current architecture and the context for the decision.
 - Use `Bash(git log)` to understand the history and evolution
 - Identify existing patterns, dependencies, and constraints
 - Note current pain points or technical debt relevant to the decision
+- Extract existing system contracts: types, interfaces, function signatures at module boundaries that must not break (feeds ADR-REQ-1 — Existing System Contracts)
+- Identify integration point signatures: exact function signatures at boundaries where new code would touch existing code (feeds ADR-REQ-2 — Integration Point Signatures)
+- Map module file paths, export lists, and dependency edges for all modules involved in the decision (feeds ADR-REQ-5 — Module Boundary & File Path Map)
 
 ### Phase 2: ANALYZE
 For each alternative:
@@ -32,6 +35,10 @@ For each alternative:
 - Identify risks, unknowns, and migration cost
 - Reference real code paths that would be affected
 - Compare with what competitors/frameworks recommend
+- For the recommended option, define:
+  - Invariants as executable assertion expressions that tests can import (feeds ADR-REQ-3)
+  - New public interface types with exact definitions — canonical types both tests and impl import (feeds ADR-REQ-4)
+  - Architectural Acceptance Criteria (AAC) as testable predicates — system-level invariants that downstream FDRs inherit
 
 ### Phase 3: DIAGRAM
 Render Mermaid diagrams to illustrate the architecture. Always include BOTH:
@@ -66,147 +73,22 @@ Before anything else, ensure the project structure exists and determine the next
 Store ADR files in `.claude/project/adr/` directory.
 
 ### Phase 4: WRITE
-Produce the ADR following the template below exactly. Save it as `.claude/project/adr/ADR-{NN}-{slug}.md`.
+Save the ADR to `.claude/project/adr/ADR-{NN}-{slug}.md` following the template in `references/adr-template.md` exactly. Read the template file and produce output matching its structure.
 
-## ADR Template
+After saving, output a `next_actions` JSON block. Build each command from values you already know — the ADR file path you just wrote, the decision topic from the user's request, and the scope. Never use placeholders; use the real values from this session.
 
-Your output MUST follow this structure:
-
-```markdown
-# ADR-{NN}: {Decision Title}
-
-**Date:** {YYYY-MM-DD}
-**Status:** Proposed
-**Scope:** {module|system|api|data|infra}
-**Decision Makers:** {team/role}
-**Technical Story:** {link to issue/ticket if mentioned}
-
-## Context
-
-{Why this decision needs to be made now. What changed, what broke, what's the trigger.
-Reference specific code, metrics, or incidents.}
-
-## Decision Drivers
-
-- {Driver 1 — e.g., "API response time exceeds 2s SLA for 10% of requests"}
-- {Driver 2 — e.g., "Current caching layer cannot be invalidated per-tenant"}
-- {Driver 3 — e.g., "Team has no Redis operational expertise"}
-
-## Current Architecture
-
-{Description of how things work today, grounded in the actual codebase.}
-
-### Current State Diagram
-
-![Current Architecture](./ADR-{NN}-{slug}-current.svg)
-
-<details>
-<summary>Mermaid source</summary>
-
-```mermaid
-{raw mermaid code for current state}
+The JSON schema is:
+```json
+{
+  "next_actions": [
+    { "action": "human-readable description of what this does", "command": "the exact CLI command the user can copy-paste" }
+  ]
+}
 ```
 
-</details>
-
-## Considered Options
-
-### Option 1: {Name}
-
-{Technical description — how it works, what changes, what stays the same.}
-
-**Pros:**
-- {Pro with evidence — reference benchmarks, docs, or code}
-
-**Cons:**
-- {Con with evidence}
-
-**Risks:**
-- {Risk with likelihood and mitigation}
-
-**Migration effort:** {Low/Medium/High — what needs to change, estimated scope}
-
-**Affected code paths:**
-- `{file:line}` — {what changes}
-
-### Option 2: {Name}
-
-{Same structure as above}
-
-### Option 3: {Name} (if applicable)
-
-{Same structure as above}
-
-## Comparison
-
-| Criterion | Option 1 | Option 2 | Option 3 |
-|-----------|----------|----------|----------|
-| Performance | {assessment} | {assessment} | {assessment} |
-| Security | {assessment} | {assessment} | {assessment} |
-| Maintainability | {assessment} | {assessment} | {assessment} |
-| Scalability | {assessment} | {assessment} | {assessment} |
-| Testability | {assessment} | {assessment} | {assessment} |
-| Migration cost | {Low/Med/High} | {Low/Med/High} | {Low/Med/High} |
-| Team familiarity | {assessment} | {assessment} | {assessment} |
-
-## Decision
-
-**Chosen option:** {Option N — Name}
-
-**Rationale:** {Why this option wins given the decision drivers and constraints.
-Be specific — don't just say "best trade-off". Explain which trade-offs matter most and why.}
-
-### Proposed Architecture
-
-![Proposed Architecture](./ADR-{NN}-{slug}-proposed.svg)
-
-<details>
-<summary>Mermaid source</summary>
-
-```mermaid
-{raw mermaid code for proposed state}
-```
-
-</details>
-
-### Architecture Comparison
-
-![Comparison](./ADR-{NN}-{slug}-comparison.svg)
-
-<details>
-<summary>Mermaid source</summary>
-
-```mermaid
-{raw mermaid code for comparison diagram}
-```
-
-</details>
-
-## Consequences
-
-### Positive
-- {Consequence with specific impact}
-
-### Negative
-- {Consequence with mitigation strategy}
-
-### Neutral
-- {Side effect that's neither good nor bad}
-
-## Implementation Plan
-
-1. {Step 1 — concrete action with affected files}
-2. {Step 2}
-3. {Step 3}
-
-**Estimated effort:** {time estimate}
-**Rollback plan:** {how to revert if the decision doesn't work out}
-
-## References
-
-- {Link to relevant docs, RFCs, blog posts, or prior ADRs}
-- {Benchmark results or performance data}
-```
+Suggest these actions:
+1. Create a feature development record that implements this ADR (reference the ADR path via `--adr`)
+2. Same but with lite flow (`--scope {scope},lite`) for skipping the test plan stage
 
 ## Rules
 

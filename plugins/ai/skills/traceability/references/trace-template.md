@@ -31,13 +31,15 @@ Low-severity gaps: {count}
 graph LR
     ADR["ADR-05<br/>Redis Decision"]:::complete
     FDR["FDR-03<br/>Session Caching"]:::partial
+    TP["TP-03<br/>Test Plan"]:::partial
     IMPL["IMPL-03<br/>Task Plan"]:::partial
     TODO["TODO-03<br/>Task Tracking"]:::partial
     REC["REC-02<br/>Cascade Record"]:::complete
     KB["LES-01, ANT-02<br/>Knowledge"]:::complete
 
     ADR --> FDR
-    FDR --> IMPL
+    FDR --> TP
+    TP --> IMPL
     IMPL --> TODO
     TODO --> REC
     REC --> KB
@@ -48,16 +50,60 @@ graph LR
     classDef na fill:#d6d8db,stroke:#383d41
 ```
 
+<!-- If ADR or TP were not generated, render them with :::na and label "Not generated".
+     Missing ADR/TP are never flagged as gaps — they are optional in the chain. -->
+
 </details>
 
 | Stage | Document | Status | Link |
 |-------|----------|--------|------|
-| Decision | {ADR-XX-title} | {Accepted/Proposed/Missing} | [Link](../adr/ADR-XX.md) |
+| Decision | {ADR-XX-title} | {Accepted/Proposed/Not generated} | [Link](../adr/ADR-XX.md) |
 | Feature plan | {FDR-XX-title} | {Complete/In Progress/Missing} | [Link](../fdr/FDR-XX.md) |
+| Test plan | {TP-XX-title} | {Complete/Draft/Not generated} | [Link](../test_plans/TP-XX.md) |
 | Task plan | {IMPL-XX-title} | {Complete/In Progress/Missing} | [Link](../implementation_plans/IMPL-XX.md) |
 | Task tracking | {TODO-XX-title} | {N/M tasks complete} | [Link](../todos/TODO-XX.yaml) |
 | Cascade record | {REC-XX-title} | {Exists/Missing} | [Link](../cascades/REC-XX.md) |
 | Knowledge | {N entries} | {Extracted/Pending} | [Index](../knowledge/index.yaml) |
+
+## Acceptance Criteria Chain
+
+<!-- Walk the full acceptance hierarchy. Adapt to what exists in the chain:
+     - Full chain (ADR+TP): AAC → FAC → EAC → TC
+     - No ADR: skip AAC → FAC; start at FAC → EAC → TC
+     - No TP: use IMPL inline test cases (iTC-) for EAC → TC
+     - No ADR + No TP: FAC → EAC → iTC only -->
+
+### AAC → FAC Traceability
+
+<!-- Omit if no ADR exists -->
+
+| AAC ID | AAC Invariant | FAC IDs | Coverage |
+|--------|-------------|---------|----------|
+| AAC-{N} | {invariant from ADR} | FAC-{N}, FAC-{M} | {Full/Partial/None} |
+
+### FAC → EAC Traceability
+
+| FAC ID | FAC Behavior | EAC IDs | Coverage |
+|--------|-------------|---------|----------|
+| FAC-{N} | {behavior from FDR} | EAC-{N}, EAC-{M} | {Full/Partial/None} |
+
+### EAC → TC Traceability
+
+| EAC ID | EAC Gate | TC IDs | Status |
+|--------|---------|--------|--------|
+| EAC-{N} | {gate from IMPL} | {TC-{N} or iTC-{N}} | {All passing / Some failing / Not implemented} |
+
+### TC → Code Verification
+
+| TC ID | TC Description | Test File | Status | Verified |
+|-------|---------------|-----------|--------|----------|
+| {TC-{N} or iTC-{N}} | {description} | `{test_file}:{line}` | {passing/failing/not written} | {Yes/No} |
+
+### Full Chain Coverage
+
+| AAC | → FAC | → EAC | → TC | → Code | End-to-End |
+|-----|-------|-------|------|--------|-----------|
+| {AAC-{N} or "—"} | FAC-{N} | EAC-{N} | {TC-{N} or iTC-{N}} | {verified/gap} | {Complete / Broken at {stage}} |
 
 ## Edge Case Coverage
 
@@ -118,9 +164,15 @@ graph LR
 
 | Dimension | Covered | Total | Percentage |
 |-----------|---------|-------|-----------|
+| AAC → FAC coverage | {N} | {total} | {%} |
+| FAC → EAC coverage | {N} | {total} | {%} |
+| EAC → TC coverage | {N} | {total} | {%} |
+| TC implemented | {N} | {total} | {%} |
 | Edge cases | {N} | {total} | {%} |
 | Risks mitigated | {N} | {total} | {%} |
 | Tasks complete | {N} | {total} | {%} |
 | Tests written | {N} | {total} | {%} |
 | Knowledge applied | {N} | {total} | {%} |
 | **Overall** | **{N}** | **{total}** | **{%}** |
+
+<!-- Omit AAC → FAC row if no ADR. Use iTC counts if no TP. -->

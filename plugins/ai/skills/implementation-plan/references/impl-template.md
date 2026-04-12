@@ -2,6 +2,7 @@
 
 **Date:** {YYYY-MM-DD}
 **Source:** {FDR-XX-slug.md | ADR-XX-slug.md}
+**Source TP:** {TP-XX-slug.md | "—"}
 **Method:** {pragmatic|tdd|agile|kanban|shape-up}
 **Status:** Planning | In Progress | Completed | Abandoned
 **Total effort:** {sum of all tasks} ({critical path duration})
@@ -12,6 +13,18 @@
 ## Source Summary
 
 {One paragraph summarizing the FDR/ADR — what we're building and why.}
+
+## Engineering Acceptance Criteria
+
+<!-- EACs: Code-level quality gates. Each traces to ≥1 FAC from FDR and ≥1 TC from TP.
+     When no TP exists, traces_to_tc uses inline test case IDs (iTC-{N}). -->
+
+| ID | Gate | traces_to_fac | traces_to_tc | Verification | Task |
+|----|------|--------------|-------------|-------------|------|
+| EAC-{N} | {code-level deliverable statement} | FAC-{N} | {TC-{N} or iTC-{N}} | {unit test / integration test / assertion} | T{NN} |
+
+<!-- FLOW FRAGMENT: If lite flow (Source TP is "—"), insert Inline Test Cases section
+     from references/flow-lite.md here. -->
 
 ## Task DAG
 
@@ -100,6 +113,9 @@ T02 (1d) → T04 (1d) → T06 (1.5d) → T08 (1d) → T09 (1d) → T12 (1d) → 
 - **Files:** `config/feature_flags.py`, `.env.example`
 - **Description:** Add `ENABLE_FEATURE_X` flag with default `false`. Wire into the feature toggle system.
 - **Done when:** Flag exists, defaults to off, can be toggled via env var.
+- **Acceptance criteria:** [] — EAC IDs this task must satisfy
+- **Function ref:** N/A — function from FDR §Function Contracts
+- **Behavior rows:** [] — I/O table rows from FDR this task implements
 
 ### Foundation
 
@@ -110,6 +126,9 @@ T02 (1d) → T04 (1d) → T06 (1.5d) → T08 (1d) → T09 (1d) → T12 (1d) → 
 - **Files:** `models/feature.py`, `migrations/00XX_add_feature.py`
 - **Description:** Create the database table/columns from FDR data model section. Add indexes per FDR performance requirements.
 - **Done when:** Migration runs cleanly, rollback works, model matches FDR spec.
+- **Acceptance criteria:** [{EAC-N}]
+- **Function ref:** {`function_name` from FDR §Function Contracts or "N/A"}
+- **Behavior rows:** [{B-N, B-M} from FDR §I/O Tables or "N/A"]
 
 #### T04: Implement model layer
 - **Track:** Foundation
@@ -118,6 +137,9 @@ T02 (1d) → T04 (1d) → T06 (1.5d) → T08 (1d) → T09 (1d) → T12 (1d) → 
 - **Files:** `models/feature.py`, `models/__init__.py`
 - **Description:** Implement model methods, validations, and constraints from FDR. Handle edge cases E1-E4 (input boundaries) at model level.
 - **Done when:** T03 tests pass, model validates inputs per FDR edge case table.
+- **Acceptance criteria:** [{EAC-N}]
+- **Function ref:** {`function_name` or "N/A"}
+- **Behavior rows:** [{B-N} or "N/A"]
 
 ### Core
 
@@ -128,6 +150,9 @@ T02 (1d) → T04 (1d) → T06 (1.5d) → T08 (1d) → T09 (1d) → T12 (1d) → 
 - **Files:** `services/feature_service.py`
 - **Description:** Business logic layer. Implement the data flow from FDR design section. Handle concurrency edge cases (E5-E7): idempotency, optimistic locking, cache invalidation.
 - **Done when:** T05 tests pass, service handles all FDR edge cases for its layer.
+- **Acceptance criteria:** [{EAC-N}]
+- **Function ref:** {`function_name`}
+- **Behavior rows:** [{B-N}]
 
 #### T08: Implement API endpoint
 - **Track:** Core
@@ -265,3 +290,5 @@ T02 (1d) → T04 (1d) → T06 (1.5d) → T08 (1d) → T09 (1d) → T12 (1d) → 
 | Risk mitigations | 4 |
 | Edge cases covered | 13 |
 | Tests planned | 5 test tasks |
+| EACs defined | {N} |
+| Inline TCs | {N (if no TP) or "— (TP exists)"} |

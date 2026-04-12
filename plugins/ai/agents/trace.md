@@ -24,6 +24,7 @@ Spawn up to 3 parallel `Agent` sub-agents to collect evidence fast:
 - `Glob` for `.claude/project/adr/ADR-*.md` — find related ADRs
 - `Glob` for `.claude/project/fdr/FDR-*.md` — find related FDRs
 - `Glob` for `.claude/project/implementation_plans/IMPL-*.md` — find IMPLs
+- `Glob` for `.claude/project/test_plans/TP-*.md` — find test plans
 - `Glob` for `.claude/project/todos/TODO-*.yaml` — find TODOs
 - `Glob` for `.claude/project/cascades/REC-*.md` — find cascade records
 - `Glob` for `.claude/project/knowledge/index.yaml` — find knowledge entries
@@ -47,7 +48,17 @@ Spawn up to 3 parallel `Agent` sub-agents to collect evidence fast:
 ### Phase 2: CROSS-REFERENCE
 With all evidence collected, build the traceability matrix:
 
-1. **Document chain**: ADR → FDR → IMPL → TODO → REC — verify each link exists
+1. **Document chain**: ADR → FDR → TP → IMPL → TODO → REC — verify each link exists. Missing ADR or TP are rendered as gray (`:::na`) "Not generated" nodes — never flagged as gaps.
+1.5. **Acceptance Criteria Chain**: Walk the full AAC→FAC→EAC→TC hierarchy, adapting to what exists:
+   - **Full chain** (ADR + TP present): verify AAC→FAC→EAC→TC; broken links are gaps
+   - **No ADR**: skip AAC→FAC matrix; start chain at FAC→EAC→TC
+   - **No TP**: use IMPL's inline test cases (`iTC-` IDs) instead of TP's `TC-` IDs for EAC→TC verification
+   - **No ADR + No TP** (minimum): verify FAC→EAC→iTC chain only
+   - For each AAC, verify at least one FAC traces to it
+   - For each FAC, verify at least one EAC traces to it
+   - For each EAC, verify at least one TC (or iTC) traces to it
+   - For each TC/iTC, verify test file exists, test is implemented, test passes
+   - Build the "Full Chain Coverage" table showing end-to-end status
 2. **Edge case coverage**: For each FDR edge case:
    - Is it in the IMPL plan? (which task?)
    - Is the task in TODO? (what status?)

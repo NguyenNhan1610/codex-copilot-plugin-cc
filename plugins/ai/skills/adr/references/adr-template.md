@@ -5,6 +5,8 @@
 **Scope:** {module|system|api|data|infra}
 **Decision Makers:** {team/role}
 **Technical Story:** {link to issue/ticket if applicable}
+**Supersedes:** {ADR-XX or "—"}
+**Related FDRs:** {FDR-XX, FDR-YY, ... or "—"}
 
 ---
 
@@ -55,6 +57,33 @@ graph TD
 ```
 
 </details>
+
+### Existing System Contracts
+
+<!-- ADR-REQ-1: Types, interfaces, and function signatures that existing code depends on.
+     Test writers use this to verify their mocks match real code. -->
+
+| Contract | Location | Signature / Shape | Must Not Break |
+|----------|----------|-------------------|----------------|
+| `{TypeName}` | `{file.ts}:{lines}` | `{exact signature or type shape}` | {Yes — reason / No} |
+
+### Integration Point Signatures
+
+<!-- ADR-REQ-2: Exact function signatures at module/service boundaries.
+     These define the test surface for integration tests. -->
+
+| Boundary | Function | Signature | Caller(s) | Contract |
+|----------|----------|-----------|-----------|----------|
+| {module boundary} | `{function_name}` | `{exact TS/Python signature}` | `{file}:{line}` | {invariants this boundary enforces} |
+
+### Invariants as Executable Assertions
+
+<!-- ADR-REQ-3: Every architectural invariant expressed as a runnable assertion.
+     Tests and runtime guards import these predicates. -->
+
+| ID | Invariant | Assertion Expression | Scope |
+|----|-----------|---------------------|-------|
+| INV-{N} | {invariant description} | `assert {predicate}` or `expect({expr}).toBe({val})` | {module / system / boundary} |
 
 ## Considered Options
 
@@ -203,6 +232,33 @@ graph TD
 
 ### Neutral
 - {Side effect} — e.g., "Session storage could later move to Redis too, but that's a separate decision"
+
+## Architectural Acceptance Criteria
+
+<!-- System-level invariants the chosen architecture must preserve.
+     Every AAC is a testable predicate. Downstream FDRs inherit and trace to these. -->
+
+| ID | Invariant | Testable Predicate | Verification | Priority |
+|----|-----------|-------------------|-------------|----------|
+| AAC-{N} | {system-level invariant} | `{executable assertion}` | {unit test / integration test / metric / manual} | {P0/P1/P2} |
+
+### New Public Interface Types
+
+<!-- ADR-REQ-4: Canonical type definitions for new public interfaces.
+     Both tests and implementation must import from the same source. -->
+
+| Type Name | Definition | Exported From | Used By |
+|-----------|-----------|---------------|---------|
+| `{TypeName}` | `{type or interface definition}` | `{file_path}` | {tests, impl, both} |
+
+### Module Boundary & File Path Map
+
+<!-- ADR-REQ-5: Exact file paths for all modules involved in this decision.
+     Tests use these for imports; implementation uses them for file creation. -->
+
+| Module | Path | Exports | Depends On |
+|--------|------|---------|-----------|
+| `{module_name}` | `{exact/path/to/module}` | `{exported symbols}` | `{dependency paths}` |
 
 ## Implementation Plan
 

@@ -15,7 +15,17 @@ Transform FDR/ADR documents into DAG-based task plans with dependencies, paralle
 /ai:implement --from .claude/project/adr/ADR-05-redis.md
 /ai:implement --from .claude/project/fdr/FDR-03-session-caching.md --method tdd
 /ai:implement --from .claude/project/fdr/FDR-03-session-caching.md --method agile
+/ai:implement --from .claude/project/fdr/FDR-03-session-caching.md --tp .claude/project/test_plans/TP-03-session-caching.md
+/ai:implement --from .claude/project/fdr/FDR-03-session-caching.md --lite
 ```
+
+## Flow Modes
+
+| Flag | Effect |
+|------|--------|
+| *(default)* | Auto-detects: if TP exists, links EAC→TC; if not, generates inline TCs |
+| `--lite` | Explicit lite flow: generates `## Inline Test Cases` with `iTC-` IDs (no TP needed) |
+| `--tp <path>` | Explicit full flow: reads TP, links EAC→TC, back-fills TP with EAC IDs |
 
 ## Methods
 
@@ -30,7 +40,10 @@ Transform FDR/ADR documents into DAG-based task plans with dependencies, paralle
 ## Output
 
 Saved to `.claude/project/implementation_plans/IMPL-{NN}-{slug}.md` with:
-- Task DAG rendered as Mermaid (SVG + raw source)
+- **Engineering Acceptance Criteria (EAC)** table tracing to FAC and TC
+- **Per-task acceptance criteria**, function refs, and behavior row refs
+- **Source TP cross-reference** (when TP exists); **Inline Test Cases** (when no TP)
+- Task DAG rendered as Mermaid (embedded inline)
 - Critical path identified and highlighted
 - Parallel tracks mapped
 - Per-task details: ID, files, dependencies, effort, done criteria
@@ -38,7 +51,8 @@ Saved to `.claude/project/implementation_plans/IMPL-{NN}-{slug}.md` with:
 
 ## References
 
-- `references/impl-template.md` — full output format with examples
+- `references/impl-template.md` — core output format (always loaded)
+- `references/flow-lite.md` — inline test cases template (lite flow, no TP)
 - `references/method-pragmatic.md` — default hybrid method
 - `references/method-tdd.md` — test-driven development
 - `references/method-agile.md` — scrum/sprint planning

@@ -12,6 +12,7 @@
 # source_impl: str | null    # e.g., "IMPL-03-session-caching.md"
 # source_fdr: str | null     # e.g., "FDR-03-session-caching.md"
 # source_adr: str | null     # e.g., "ADR-05-redis.md"
+# source_tp: str | null      # e.g., "TP-03-session-caching.md"
 # created: date              # e.g., 2026-04-09
 # updated: datetime          # e.g., 2026-04-09T12:30:00Z
 
@@ -32,6 +33,7 @@
 # evidence: list[Evidence]
 # references: list[Reference]
 # tests: list[TestCoverage]
+# acceptance_criteria: list[str]  # e.g., ["EAC-1", "EAC-3"] — EAC IDs this task must satisfy
 # notes: str | null
 
 # --- Evidence ---
@@ -48,6 +50,19 @@
 # name: str                  # e.g., "test_cache_create"
 # file: str                  # e.g., "tests/test_cache.py:12"
 # status: str                # passing | failing | skipped | not_written
+
+# --- AcceptanceTrace (top-level, after tasks) ---
+# acceptance_trace:
+#   aac: list[AcceptanceCriterionStatus]  # from ADR (empty [] if no ADR)
+#   fac: list[AcceptanceCriterionStatus]  # from FDR
+#   eac: list[AcceptanceCriterionStatus]  # from IMPL
+
+# --- AcceptanceCriterionStatus ---
+# id: str                    # e.g., "AAC-1" or "FAC-3" or "EAC-2"
+# description: str           # human-readable description
+# status: str                # not_started | in_progress | verified | failed
+# verified_by: str | null    # task ID or test name that verified this
+# verified_at: datetime | null
 
 # --- Status (enum) ---
 # Valid values: pending, in-progress, complete, blocked, cancelled
@@ -71,6 +86,7 @@ metadata:
   source_impl: IMPL-03-session-caching.md
   source_fdr: FDR-03-session-caching.md
   source_adr: ADR-05-redis.md
+  source_tp: TP-03-session-caching.md
   created: 2026-04-09
   updated: 2026-04-09T12:30:00Z
 
@@ -96,6 +112,7 @@ tasks:
         ref: "T02"
         status: handled
     tests: []
+    acceptance_criteria: []
     notes: "Migration runs cleanly, rollback tested"
 
   - id: T06
@@ -134,6 +151,7 @@ tasks:
       - name: test_cache_idempotent
         file: "tests/test_cache.py:47"
         status: failing
+    acceptance_criteria: ["EAC-1", "EAC-2"]
     notes: "Idempotency done, optimistic locking still needed"
 
   - id: T10
@@ -150,3 +168,40 @@ tasks:
         ref: "T10"
         status: pending
     tests: []
+    acceptance_criteria: ["EAC-5"]
+
+# --- Acceptance Trace (tracks AAC/FAC/EAC verification status) ---
+acceptance_trace:
+  aac:
+    - id: AAC-1
+      description: "Cache invalidation preserves tenant isolation"
+      status: verified
+      verified_by: "T12"
+      verified_at: "2026-04-10T14:00:00Z"
+  fac:
+    - id: FAC-1
+      description: "User sees cached data within 100ms"
+      status: in_progress
+      verified_by: null
+      verified_at: null
+    - id: FAC-2
+      description: "Cache invalidation on data mutation"
+      status: not_started
+      verified_by: null
+      verified_at: null
+  eac:
+    - id: EAC-1
+      description: "cache_get returns cached value when TTL not expired"
+      status: verified
+      verified_by: "test_cache_get_hit"
+      verified_at: "2026-04-09T16:00:00Z"
+    - id: EAC-2
+      description: "cache_set stores with tenant prefix"
+      status: not_started
+      verified_by: null
+      verified_at: null
+    - id: EAC-5
+      description: "metrics endpoint reports cache hit/miss ratio"
+      status: not_started
+      verified_by: null
+      verified_at: null

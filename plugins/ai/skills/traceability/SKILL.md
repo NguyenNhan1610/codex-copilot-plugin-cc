@@ -21,7 +21,9 @@ Walk the entire document chain, cross-reference evidence, verify code, and produ
 
 | Dimension | What's verified |
 |-----------|----------------|
-| Document chain | ADR → FDR → IMPL → TODO → cascade → knowledge all linked |
+| Document chain | ADR → FDR → **TP** → IMPL → TODO → cascade → knowledge all linked |
+| Acceptance chain | AAC → FAC → EAC → TC fully linked, no broken references |
+| Test plan | TP exists (optional), covers all FAC, linked to IMPL via EAC |
 | Edge cases | FDR edge case → IMPL task → TODO status → code exists → test exists |
 | Risks | FDR risk → IMPL mitigation → code evidence |
 | Tasks | IMPL task → TODO status → cascade timestamp → file verified |
@@ -31,7 +33,8 @@ Walk the entire document chain, cross-reference evidence, verify code, and produ
 ## Output
 
 Saved to `.claude/project/traces/TRACE-{NN}-{slug}.md`:
-- Document chain diagram (Mermaid with color-coded status)
+- Acceptance Criteria Chain matrices (AAC→FAC→EAC→TC with code verification)
+- Document chain diagram (Mermaid with color-coded status, TP included)
 - Edge case coverage matrix with file:line verification
 - Risk mitigation coverage with code evidence
 - Task completion with cascade timestamps

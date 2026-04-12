@@ -62,16 +62,16 @@ test("adversarial review command uses AskUserQuestion and background Bash while 
   assert.match(source, /--model <provider:model>/);
 });
 
-test("plugin exposes exactly 18 unified commands", () => {
+test("plugin exposes exactly 20 unified commands", () => {
   const commandFiles = fs.readdirSync(path.join(PLUGIN_ROOT, "commands")).sort();
   assert.deepEqual(commandFiles, [
-    "adr.md",
     "adversarial-review.md",
+    "architecture-decision-record.md",
     "cancel.md",
     "cascade.md",
     "council.md",
     "debug.md",
-    "fdr.md",
+    "feature-development-record.md",
     "implement.md",
     "knowledge.md",
     "lint.md",
@@ -81,8 +81,10 @@ test("plugin exposes exactly 18 unified commands", () => {
     "review.md",
     "setup.md",
     "status.md",
+    "test-plan.md",
     "todo.md",
-    "trace.md"
+    "trace.md",
+    "validate.md"
   ]);
 });
 
@@ -147,8 +149,8 @@ test("rescue command absorbs continue semantics", () => {
   assert.match(readme, /\/ai:council/);
   assert.match(readme, /\/ai:mermaid/i);
   assert.match(readme, /\/ai:debug/i);
-  assert.match(readme, /\/ai:adr/i);
-  assert.match(readme, /\/ai:fdr/i);
+  assert.match(readme, /\/ai:architecture-decision-record/i);
+  assert.match(readme, /\/ai:feature-development-record/i);
   assert.match(readme, /\/ai:implement/i);
   assert.match(readme, /\/ai:todo/i);
   assert.match(readme, /\/ai:cascade/i);

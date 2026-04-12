@@ -1,20 +1,20 @@
 ---
-description: Generate a Feature Development Decision Record with edge cases, risk assessment, and impact analysis
+description: Generate a Feature Development Record with edge cases, risk assessment against existing codebase, and impact analysis
 argument-hint: '[--scope backend|frontend|fullstack|api|data] <feature description>'
 context: fork
 allowed-tools: Read, Glob, Grep, Bash(node:*), Bash(git:*), Agent, AskUserQuestion
 ---
 
-Route this request to the `ai:fdr` subagent.
+Route this request to the `ai:feature-development-record` subagent.
 
 Raw user request:
 $ARGUMENTS
 
-The FDR agent produces a comprehensive Feature Development Decision Record by:
+The FDR agent produces a comprehensive Feature Development Record by:
 1. **Mapping** the current codebase to understand affected modules, dependencies, and API surface
 2. **Designing** the implementation with affected code paths
 3. **Stress-testing** by systematically enumerating edge cases and failure modes
-4. **Assessing** risks with a likelihood x impact matrix and concrete mitigations
+4. **Assessing** risks — both feature-specific AND risks the new feature introduces to the existing codebase (regressions, contract breaks, performance degradation, dependency conflicts)
 5. **Planning** implementation steps, testing strategy, and rollout plan with Mermaid diagrams
 
 Execution mode:

@@ -412,8 +412,8 @@ ${marker}
 
 Core loop (ADR → FDR → IMPL → TODO → code → test → lint → cascade → review):
 
-1. \`/ai:adr\` — record architecture decisions with trade-offs and diagrams
-2. \`/ai:fdr\` — plan a feature with edge cases, risks, and impact analysis
+1. \`/ai:architecture-decision-record\` — record architecture decisions with trade-offs and diagrams
+2. \`/ai:feature-development-record\` — plan a feature with edge cases, risks against existing codebase, and impact analysis
 3. \`/ai:implement\` — turn an FDR/ADR into a DAG task plan with critical path
 4. \`/ai:todo\` — track tasks with status, tickets, and evidence links
 5. Write code and tests; use \`.claude/project/scripts/hypothesis/\` for investigative scripts

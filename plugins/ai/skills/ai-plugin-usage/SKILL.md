@@ -22,8 +22,8 @@ Use Codex or GitHub Copilot from inside Claude Code for code reviews, multi-agen
 | Investigate a flaky test | `/ai:debug --type flaky Test fails randomly in CI` |
 | Delegate a fix to Codex | `/ai:rescue fix the failing test` |
 | Continue previous Codex work | `/ai:rescue --resume apply the top fix` |
-| Document an architecture decision | `/ai:adr Should we use Redis or Memcached?` |
-| Plan a feature with risk assessment | `/ai:fdr Add multi-tenant session caching` |
+| Document an architecture decision | `/ai:architecture-decision-record Should we use Redis or Memcached?` |
+| Plan a feature with risk assessment | `/ai:feature-development-record Add multi-tenant session caching` |
 | Generate implementation checklist | `/ai:implement --from .claude/project/fdr/FDR-03.md` |
 | Document what was built (handoff) | `/ai:cascade Add session caching` |
 | Extract/search project knowledge | `/ai:knowledge extract` or `/ai:knowledge search django` |
@@ -165,16 +165,16 @@ Uses 3 parallel sub-agents for fast evidence collection. Produces: document chai
 
 ### Architecture Decision Records
 
-#### `/ai:adr` — Architecture Decision Record
+#### `/ai:architecture-decision-record` — Architecture Decision Record
 
 Generate a comprehensive ADR with Mermaid diagrams grounded in your codebase.
 
 ```bash
-/ai:adr Should we use Redis or Memcached for caching?
-/ai:adr --scope api REST vs GraphQL for the mobile API
-/ai:adr --scope data Normalize orders table or use JSONB?
-/ai:adr --scope system Microservices vs monolith
-/ai:adr --scope infra ECS vs Kubernetes
+/ai:architecture-decision-record Should we use Redis or Memcached for caching?
+/ai:architecture-decision-record --scope api REST vs GraphQL for the mobile API
+/ai:architecture-decision-record --scope data Normalize orders table or use JSONB?
+/ai:architecture-decision-record --scope system Microservices vs monolith
+/ai:architecture-decision-record --scope infra ECS vs Kubernetes
 ```
 
 Scopes: `module` (default), `system`, `api`, `data`, `infra`
@@ -183,15 +183,15 @@ Outputs: Context, decision drivers, 2-3 options with trade-offs, comparison tabl
 
 ### Feature Development Records
 
-#### `/ai:fdr` — Feature Development Decision Record
+#### `/ai:feature-development-record` — Feature Development Record
 
-Plan a feature with deep codebase analysis, edge cases, risk assessment, and implementation roadmap.
+Plan a feature with deep codebase analysis, edge cases, risk assessment against existing codebase, and implementation roadmap.
 
 ```bash
-/ai:fdr Add multi-tenant session caching
-/ai:fdr --scope api Add rate limiting to the public API
-/ai:fdr --scope fullstack Add real-time notifications
-/ai:fdr --scope data Migrate orders to event sourcing
+/ai:feature-development-record Add multi-tenant session caching
+/ai:feature-development-record --scope api Add rate limiting to the public API
+/ai:feature-development-record --scope fullstack Add real-time notifications
+/ai:feature-development-record --scope data Migrate orders to event sourcing
 ```
 
 Scopes: `backend` (default), `frontend`, `fullstack`, `api`, `data`

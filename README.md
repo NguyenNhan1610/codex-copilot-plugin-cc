@@ -31,10 +31,11 @@ ADR → FDR → IMPL → TODO → code → test → lint → cascade → review
 | Language support | Generic | **Python, TypeScript, Dart** with techstack variants (FastAPI, Django, Next.js, Flutter) |
 | Multi-agent | None | **`/ai:council`** — parallel agents discuss, debate, synthesize |
 | Debugging | None | **`/ai:debug`** — hypothesis-based with Mermaid decision trees |
-| Architecture | None | **`/ai:adr`** — Architecture Decision Records with diagrams |
-| Feature planning | None | **`/ai:fdr`** — Feature Development Records with edge cases + risk assessment |
+| Architecture | None | **`/ai:architecture-decision-record`** — Architecture Decision Records with diagrams |
+| Feature planning | None | **`/ai:feature-development-record`** — Feature Development Records with edge cases + risk assessment |
 | Implementation | None | **`/ai:implement`** — DAG-based task plans from FDR/ADR |
 | Task tracking | None | **`/ai:todo`** — Pydantic-style YAML tasks with status, tickets, evidence |
+| Stage validation | None | **`/ai:validate`** — pairwise coverage checks between planning documents |
 | Handoff records | None | **`/ai:cascade`** — implementation records tracing back to all documents |
 | Lint/typecheck | None | **`/ai:lint`** — batch ruff + pyright + eslint + tsc on Stop hook |
 | Diagrams | None | **`/ai:mermaid`** — validate and render Mermaid.js diagrams |
@@ -62,12 +63,13 @@ ADR → FDR → IMPL → TODO → code → test → lint → cascade → review
 
 | Command | Description |
 |---------|-------------|
-| `/ai:adr` | Architecture Decision Records with Mermaid diagrams |
-| `/ai:fdr` | Feature Development Records with edge cases + risk assessment |
+| `/ai:architecture-decision-record` | Architecture Decision Records with Mermaid diagrams |
+| `/ai:feature-development-record` | Feature Development Records with edge cases + risk assessment |
 | `/ai:implement` | DAG-based implementation plans from FDR/ADR |
 | `/ai:todo` | Task tracking with status, tickets, and traceability |
 | `/ai:cascade` | Handoff records with traceability to all documents |
 | `/ai:knowledge` | Extract, index, search reusable knowledge from project docs |
+| `/ai:validate` | Pairwise stage validation: check if downstream doc fulfills upstream |
 | `/ai:trace` | Traceability report: verify completeness across all documents |
 | `/ai:mermaid` | Validate and render Mermaid.js diagrams |
 
@@ -115,8 +117,8 @@ After `/ai:setup --init`:
 
 ```
 .claude/project/
-├── adr/                      ← /ai:adr — Architecture Decision Records
-├── fdr/                      ← /ai:fdr — Feature Development Records
+├── adr/                      ← /ai:architecture-decision-record — Architecture Decision Records
+├── fdr/                      ← /ai:feature-development-record — Feature Development Records
 ├── implementation_plans/     ← /ai:implement — DAG task plans
 ├── todos/                    ← /ai:todo — Task tracking (YAML)
 ├── cascades/                 ← /ai:cascade — Implementation records
@@ -186,9 +188,9 @@ Multiple agents analyze independently, debate findings, and synthesize.
 ## Architecture Decision Records
 
 ```bash
-/ai:adr Should we use Redis or Memcached for caching?
-/ai:adr --scope api REST vs GraphQL for the mobile API
-/ai:adr --scope data Normalize orders table or use JSONB?
+/ai:architecture-decision-record Should we use Redis or Memcached for caching?
+/ai:architecture-decision-record --scope api REST vs GraphQL for the mobile API
+/ai:architecture-decision-record --scope data Normalize orders table or use JSONB?
 ```
 
 **Scopes:** `module`, `system`, `api`, `data`, `infra`
@@ -198,9 +200,9 @@ Outputs 3 Mermaid diagrams (current, proposed, comparison) + comparison table + 
 ## Feature Development Records
 
 ```bash
-/ai:fdr Add multi-tenant session caching
-/ai:fdr --scope api Add rate limiting to the public API
-/ai:fdr --scope fullstack Add real-time notifications
+/ai:feature-development-record Add multi-tenant session caching
+/ai:feature-development-record --scope api Add rate limiting to the public API
+/ai:feature-development-record --scope fullstack Add real-time notifications
 ```
 
 **Scopes:** `backend`, `frontend`, `fullstack`, `api`, `data`

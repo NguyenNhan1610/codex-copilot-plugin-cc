@@ -35,6 +35,8 @@ Read the source FDR/ADR document and extract:
 - Observability requirements (metrics, logs, alerts)
 - Backward compatibility requirements
 
+- Check if a Test Plan (TP) exists for this feature: scan `.claude/project/test_plans/TP-*.md` for a TP that references the same FDR, or check for a `--lite` flag. If TP found, read it and extract: TC table, FAC→TC matrix, coverage gaps. Record the TP file path for the `Source TP` header field. **If no TP found or `--lite` flag is set**, set `Source TP: —` and Read `references/flow-lite.md` for the Inline Test Cases template to use in Phase 2.
+
 Also explore the codebase to understand:
 - Current test patterns (framework, structure, naming)
 - CI/CD pipeline structure
@@ -58,7 +60,17 @@ Files: List of files to create/modify
 Depends on: [T{XX}, T{YY}] (task IDs this depends on, empty = root task)
 Effort: 0.5d | 1d | 2d
 Done when: Concrete acceptance criteria
+Acceptance criteria: [EAC-{N}] — EAC IDs this task must satisfy
+Function ref: function_name from FDR §Function Contracts (or "N/A")
+Behavior rows: [B-{N}] from FDR §I/O Tables (or "N/A")
 ```
+
+**Derive Engineering Acceptance Criteria (EAC):**
+- For each task, identify which FAC(s) it contributes to satisfying
+- Create EAC entries: each EAC is a code-level gate (e.g., "function X returns Y for input Z")
+- Link each EAC to its source FAC(s) via `traces_to_fac`
+- **If TP exists**: link EAC→TC from the TP's TC table via `traces_to_tc`. After generating all EACs, **back-fill the TP document**: update the `traces_to_eac` column in the TP's TC table to reference the newly created EAC IDs.
+- **If no TP (lite flow)**: follow `references/flow-lite.md` to generate the `## Inline Test Cases` section per its derivation rules. Use `iTC-` IDs in the EAC table's `traces_to_tc` column.
 
 ### Phase 3: BUILD DAG
 Construct the Directed Acyclic Graph:
@@ -117,6 +129,23 @@ Save the plan following the template in `references/impl-template.md`.
 
 ## Rules
 
+- The IMPL output must include the EAC table after Source Summary, `Source TP` in header (or "—"), and per-task `acceptance_criteria`, `function_ref`, and `behavior_rows` fields. If no TP, include the Inline Test Cases section.
+
+After saving, output a `next_actions` JSON block. Build each command from the actual file paths and document IDs produced in this session. Never use placeholders.
+
+The JSON schema is:
+```json
+{
+  "next_actions": [
+    { "action": "human-readable description", "command": "exact CLI command the user can copy-paste" }
+  ]
+}
+```
+
+Suggest:
+1. Validate source→IMPL coverage (using the real source FDR or ADR ID and the IMPL ID)
+2. If a TP was used, suggest validate TP→IMPL
+3. Generate task tracking from this IMPL (using the real IMPL ID)
 - Every task must have a unique ID (T01, T02, etc.)
 - Dependencies must reference valid task IDs — no forward references to undefined tasks
 - DAG must be acyclic — validate before writing

@@ -5,7 +5,7 @@ context: fork
 allowed-tools: Read, Glob, Grep, Bash(node:*), Bash(git:*), Agent, AskUserQuestion
 ---
 
-Route this request to the `ai:adr` subagent.
+Route this request to the `ai:architecture-decision-record` subagent.
 
 Raw user request:
 $ARGUMENTS

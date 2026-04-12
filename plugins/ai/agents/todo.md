@@ -19,10 +19,32 @@ You are a TODO tracking agent. You manage structured task files with full tracea
 
 ### `--from IMPL-{NN}` — Generate TODO from IMPL Plan
 1. Read the source IMPL file from `.claude/project/implementation_plans/`
-2. Extract all tasks (T{NN}: title, track, depends_on, effort, files)
+2. Extract all tasks (T{NN}: title, track, depends_on, effort, files, acceptance_criteria)
 3. Cross-reference with FDR for edge cases and risks
-4. Create `.claude/project/todos/TODO-{NN}-{slug}.yaml` with all tasks in `pending` status
-5. Include references to IMPL tasks, FDR edge cases, and risks
+4. Generate the `acceptance_trace` block:
+   - Always: read IMPL's EAC table → create entries in `acceptance_trace.eac` with status `not_started`
+   - Always: read FDR's FAC table (from IMPL's `Source` field) → create entries in `acceptance_trace.fac` with status `not_started`
+   - If ADR exists in chain (FDR's `Source ADR` is not "—"): read AAC table → create entries in `acceptance_trace.aac` with status `not_started`
+   - If no ADR: set `acceptance_trace.aac: []` (empty list)
+   - Set per-task `acceptance_criteria` from IMPL task's `Acceptance criteria` field
+   - Set `source_tp` in metadata from IMPL's `Source TP` header (may be `null` if "—")
+5. Create `.claude/project/todos/TODO-{NN}-{slug}.yaml` with all tasks in `pending` status
+6. Include references to IMPL tasks, FDR edge cases, and risks
+7. After saving, output a `next_actions` JSON block. Build each command from the actual IMPL ID, TODO ID, and source FDR ID known from this session. Never use placeholders.
+
+   The JSON schema is:
+   ```json
+   {
+     "next_actions": [
+       { "action": "human-readable description", "command": "exact CLI command" }
+     ]
+   }
+   ```
+
+   Suggest:
+   1. Validate IMPL→TODO coverage (real IDs)
+   2. View the task board
+   3. If full flow, suggest full-chain traceability check with `/ai:trace` referencing the source FDR
 
 ### `update` (no task id) — Reconcile Task State With Recent Work
 
@@ -82,7 +104,12 @@ Rules for this mode:
 3. Match cascade entries to task files (from task's `evidence` and `files` fields)
 4. Auto-update status: if all task files exist/modified → mark `complete`
 5. Add evidence entries from cascade timestamps + file:line
-6. Report what was synced
+6. Reconcile acceptance criteria status:
+   - For each EAC in `acceptance_trace.eac`: if the task(s) referencing this EAC (via `acceptance_criteria`) are `complete` AND all related tests are `passing`, set status to `verified` with `verified_by` (task ID) and `verified_at` (now)
+   - For each FAC in `acceptance_trace.fac`: if ALL EACs tracing to this FAC are `verified`, set FAC status to `verified`
+   - For each AAC in `acceptance_trace.aac`: if ALL FACs tracing to this AAC are `verified`, set AAC status to `verified`
+   - Skip AAC rollup if `acceptance_trace.aac` is empty (no ADR)
+7. Report what was synced, including acceptance criteria status changes
 
 ## TODO YAML Schema
 
