@@ -1,29 +1,36 @@
 # AI Companion Plugin for Claude Code
 
-Use **Codex** or **GitHub Copilot** from inside Claude Code for code reviews, multi-agent discussions, hypothesis debugging, architecture decisions, feature planning, task tracking, and auto-installable coding rules — with deep support for FastAPI, Next.js, Django, Flutter, and more.
+Use **Codex** or **GitHub Copilot** from inside Claude Code for code reviews, multi-agent discussions, hypothesis debugging, architecture decisions, feature planning, test planning, task tracking, and auto-installable coding rules — with deep support for FastAPI, Next.js, Django, Flutter, and more.
 
-A high-quality fork of [openai/codex-plugin-cc](https://github.com/openai/codex-plugin-cc) with significant enhancements.
+**Author:** [NguyenNhan1610](https://github.com/NguyenNhan1610)
+**Version:** 4.3.1
 
 ## Document Flow
 
 ```
-ADR → FDR → IMPL → TODO → code → test → lint → cascade → review
- ↑                   ↑      ↑       ↑      ↑       ↑       ↑
- └───────────────────┴──────┴───────┴──────┴───────┴───────┘
-                         (all trace back)
-                              ↓
-                    /ai:knowledge extract
-                              ↓
-              patterns · lessons · decisions · antipatterns
-                              ↓
-                 Auto-suggested on next ADR/FDR/IMPL/debug
+ADR → FDR → TP → IMPL → TODO → code → test → lint → cascade → review
+ ↑                                ↑      ↑       ↑      ↑       ↑
+ └────────────────────────────────┴──────┴───────┴──────┴───────┘
+                              (all trace back)
+
+Acceptance hierarchy:  AAC (ADR) → FAC (FDR) → TC (TP) → EAC (IMPL) → acceptance_trace (TODO)
+Pairwise validation:   /ai:validate {upstream} {downstream}
+Minimum viable chain:  FDR → IMPL → TODO  (lite mode — no ADR, no TP)
+
+              /ai:knowledge extract
+                       ↓
+       patterns · lessons · decisions · antipatterns
+                       ↓
+          Auto-suggested on next ADR/FDR/IMPL/debug
 
               /ai:trace --verify FDR-03
-                              ↓
-               READY TO SHIP / NOT READY / NEEDS REVIEW
+                       ↓
+        READY TO SHIP / NOT READY / NEEDS REVIEW
 ```
 
 ## What's New in This Fork
+
+A high-quality fork of [openai/codex-plugin-cc](https://github.com/openai/codex-plugin-cc) with significant enhancements.
 
 | Feature | Original | This Fork |
 |---------|----------|-----------|
@@ -31,11 +38,12 @@ ADR → FDR → IMPL → TODO → code → test → lint → cascade → review
 | Language support | Generic | **Python, TypeScript, Dart** with techstack variants (FastAPI, Django, Next.js, Flutter) |
 | Multi-agent | None | **`/ai:council`** — parallel agents discuss, debate, synthesize |
 | Debugging | None | **`/ai:debug`** — hypothesis-based with Mermaid decision trees |
-| Architecture | None | **`/ai:architecture-decision-record`** — Architecture Decision Records with diagrams |
-| Feature planning | None | **`/ai:feature-development-record`** — Feature Development Records with edge cases + risk assessment |
-| Implementation | None | **`/ai:implement`** — DAG-based task plans from FDR/ADR |
-| Task tracking | None | **`/ai:todo`** — Pydantic-style YAML tasks with status, tickets, evidence |
-| Stage validation | None | **`/ai:validate`** — pairwise coverage checks between planning documents |
+| Architecture | None | **`/ai:architecture-decision-record`** — ADRs with diagrams + acceptance criteria |
+| Feature planning | None | **`/ai:feature-development-record`** — FDRs with edge cases, risk assessment, scope flags |
+| Test planning | None | **`/ai:test-plan`** — structured test plans with FAC/AAC traceability matrices |
+| Implementation | None | **`/ai:implement`** — DAG-based task plans with EAC traceability |
+| Task tracking | None | **`/ai:todo`** — YAML tasks with status, tickets, evidence, acceptance trace |
+| Stage validation | None | **`/ai:validate`** — pairwise coverage checks between any two planning documents |
 | Handoff records | None | **`/ai:cascade`** — implementation records tracing back to all documents |
 | Lint/typecheck | None | **`/ai:lint`** — batch ruff + pyright + eslint + tsc on Stop hook |
 | Diagrams | None | **`/ai:mermaid`** — validate and render Mermaid.js diagrams |
@@ -45,7 +53,7 @@ ADR → FDR → IMPL → TODO → code → test → lint → cascade → review
 | Traceability | None | **`/ai:trace`** — verify completeness with 3 parallel sub-agents + ship/no-ship verdict |
 | Project init | None | **`/ai:setup --init`** — creates project dirs + appends to CLAUDE.md |
 
-## Commands (18)
+## Commands (20)
 
 ### Review & Analysis
 
@@ -65,11 +73,12 @@ ADR → FDR → IMPL → TODO → code → test → lint → cascade → review
 |---------|-------------|
 | `/ai:architecture-decision-record` | Architecture Decision Records with Mermaid diagrams |
 | `/ai:feature-development-record` | Feature Development Records with edge cases + risk assessment |
+| `/ai:test-plan` | Structured test plans from FDR with traceability matrices |
 | `/ai:implement` | DAG-based implementation plans from FDR/ADR |
 | `/ai:todo` | Task tracking with status, tickets, and traceability |
+| `/ai:validate` | Pairwise stage validation: check if downstream doc fulfills upstream |
 | `/ai:cascade` | Handoff records with traceability to all documents |
 | `/ai:knowledge` | Extract, index, search reusable knowledge from project docs |
-| `/ai:validate` | Pairwise stage validation: check if downstream doc fulfills upstream |
 | `/ai:trace` | Traceability report: verify completeness across all documents |
 | `/ai:mermaid` | Validate and render Mermaid.js diagrams |
 
@@ -119,8 +128,10 @@ After `/ai:setup --init`:
 .claude/project/
 ├── adr/                      ← /ai:architecture-decision-record — Architecture Decision Records
 ├── fdr/                      ← /ai:feature-development-record — Feature Development Records
+├── test_plans/               ← /ai:test-plan — Test Plans with traceability matrices
 ├── implementation_plans/     ← /ai:implement — DAG task plans
 ├── todos/                    ← /ai:todo — Task tracking (YAML)
+├── validations/              ← /ai:validate — Pairwise validation reports
 ├── cascades/                 ← /ai:cascade — Implementation records
 ├── scripts/hypothesis/       ← /ai:debug — Hypothesis test scripts + results
 ├── traces/                   ← /ai:trace — Traceability verification reports
@@ -136,6 +147,21 @@ After `/ai:setup --init`:
 .claude/cascades/             ← Auto-generated change log (gitignored)
 .claude/rules/                ← On-demand coding rules by stack
 ```
+
+## Scope Flags
+
+Planning commands (`/ai:feature-development-record`, `/ai:implement`, `/ai:todo`) support composable scope flags:
+
+```bash
+/ai:feature-development-record --scope backend Add caching        # Full flow, backend (default)
+/ai:feature-development-record --scope frontend,lite Add widget   # Lite flow, frontend
+/ai:feature-development-record --scope fullstack Add notifications # Full flow, fullstack
+```
+
+**Feature scope:** `backend` (default), `frontend`, `fullstack`, `api`, `data`
+**Flow modifier:** `lite` — skips ADR and TP stages (FDR → IMPL → TODO only)
+
+Templates load only relevant fragments per scope, keeping context lean.
 
 ## Aspect-Based Code Review
 
@@ -195,7 +221,7 @@ Multiple agents analyze independently, debate findings, and synthesize.
 
 **Scopes:** `module`, `system`, `api`, `data`, `infra`
 
-Outputs 3 Mermaid diagrams (current, proposed, comparison) + comparison table + implementation plan. Saved to `.claude/project/adr/ADR-{NN}-{slug}.md`.
+Outputs 3 Mermaid diagrams (current, proposed, comparison) + comparison table + AAC (Architectural Acceptance Criteria) + implementation plan. Saved to `.claude/project/adr/ADR-{NN}-{slug}.md`.
 
 ## Feature Development Records
 
@@ -203,11 +229,21 @@ Outputs 3 Mermaid diagrams (current, proposed, comparison) + comparison table + 
 /ai:feature-development-record Add multi-tenant session caching
 /ai:feature-development-record --scope api Add rate limiting to the public API
 /ai:feature-development-record --scope fullstack Add real-time notifications
+/ai:feature-development-record --scope frontend,lite Add dashboard widget
 ```
 
-**Scopes:** `backend`, `frontend`, `fullstack`, `api`, `data`
+**Scopes:** `backend`, `frontend`, `fullstack`, `api`, `data` — add `,lite` for minimal flow
 
-Includes: edge case tables (input, concurrency, auth, scale), risk matrix, backward compatibility, testing strategy, rollout plan with Mermaid diagrams. Saved to `.claude/project/fdr/FDR-{NN}-{slug}.md`.
+Includes: FAC (Feature Acceptance Criteria), function contracts, I/O tables, edge case tables with concrete test data, risk matrix, risks to existing codebase, backward compatibility, testing strategy, rollout plan with Mermaid diagrams. Saved to `.claude/project/fdr/FDR-{NN}-{slug}.md`.
+
+## Test Plans
+
+```bash
+/ai:test-plan --from FDR-03
+/ai:test-plan --from FDR-03 --adr ADR-05
+```
+
+Derives test cases from FDR I/O tables, edge cases, and risks. Builds traceability matrices: FAC→TC, AAC→TC, Edge→TC, Risk→TC. Saved to `.claude/project/test_plans/TP-{NN}-{slug}.md`.
 
 ## Implementation Plans
 
@@ -218,7 +254,20 @@ Includes: edge case tables (input, concurrency, auth, scale), risk matrix, backw
 
 **Methods:** `pragmatic` (default), `tdd`, `agile`, `kanban`, `shape-up`
 
-Produces DAG of tasks with dependencies, critical path, parallel tracks. Saved to `.claude/project/implementation_plans/IMPL-{NN}-{slug}.md`.
+Produces DAG of tasks with dependencies, critical path, parallel tracks, EAC (Engineering Acceptance Criteria) tracing to FAC and TC. Saved to `.claude/project/implementation_plans/IMPL-{NN}-{slug}.md`.
+
+## Stage Validation
+
+```bash
+/ai:validate ADR-05 FDR-03              # Check ADR→FDR coverage
+/ai:validate FDR-03 IMPL-03            # Check FDR→IMPL coverage
+/ai:validate FDR-03                     # Auto-discover upstream from header
+/ai:validate ADR-05 IMPL-03            # Skip-step validation
+```
+
+**Valid pairs:** ADR→FDR, FDR→TP, FDR→IMPL, TP→IMPL, IMPL→TODO, ADR→IMPL (skip), FDR→TODO (skip)
+
+Fast structural check — reads two docs, cross-references tables, reports coverage gaps. Saved to `.claude/project/validations/VAL-{NN}-{upstream}-to-{downstream}.md`.
 
 ## Task Tracking
 
@@ -230,7 +279,7 @@ Produces DAG of tasks with dependencies, critical path, parallel tracks. Saved t
 /ai:todo --sync                       # Auto-sync from cascade
 ```
 
-Pydantic-style YAML schema: status, priority, track, assignee, ticket, evidence (file:line), references (IMPL/FDR/ADR), tests, dependencies. Saved to `.claude/project/todos/TODO-{NN}-{slug}.yaml`.
+YAML schema: status, priority, track, assignee, ticket, evidence (file:line), references (IMPL/FDR/ADR), tests, dependencies, acceptance_trace (EAC/FAC/AAC). Saved to `.claude/project/todos/TODO-{NN}-{slug}.yaml`.
 
 ## Handoff Records
 
@@ -257,7 +306,7 @@ Extract reusable knowledge from project experience and retrieve it when starting
 
 **Types:** `pattern` (reusable code), `lesson` (what went wrong/right), `decision` (ADR outcome), `antipattern` (bad pattern discovered)
 
-**Auto-suggestion (Phase 2):** FDR, ADR, IMPL, and debug agents automatically check the knowledge index and surface relevant past experience before starting analysis.
+**Auto-suggestion:** FDR, ADR, IMPL, and debug agents automatically check the knowledge index and surface relevant past experience before starting analysis.
 
 ## Traceability Reports
 
@@ -270,7 +319,7 @@ Verify feature completeness by tracing decisions through plans, code, tests, and
 /ai:trace --query "Is session caching fully implemented?"
 ```
 
-Uses 3 parallel sub-agents for fast evidence collection. Checks: document chain, edge case coverage, risk mitigation, task completion, test coverage, knowledge applied. Produces gap analysis with severity classification and overall coverage percentage. Saved to `.claude/project/traces/TRACE-{NN}-{slug}.md`.
+Uses 3 parallel sub-agents for fast evidence collection. Checks: document chain, acceptance criteria chain (AAC→FAC→EAC→TC), edge case coverage, risk mitigation, task completion, test coverage, knowledge applied. Produces gap analysis with severity classification and overall coverage percentage. Saved to `.claude/project/traces/TRACE-{NN}-{slug}.md`.
 
 ## Lint & Typecheck
 
@@ -359,7 +408,7 @@ Yes. Use `--model copilot:model-name` on any command, or `/ai:setup --provider c
 
 ### Does the plugin modify my code?
 
-Reviews, council, debug, ADR, FDR are **read-only**. Only `/ai:rescue` can make changes. `/ai:lint --fix` auto-fixes safe issues.
+Reviews, council, debug, ADR, FDR, test-plan, implement, validate, trace are **read-only**. Only `/ai:rescue` can make changes. `/ai:lint --fix` auto-fixes safe issues.
 
 ### Can I resume work in Codex?
 
@@ -367,7 +416,7 @@ Yes. `/ai:result` includes the Codex session ID. Run `codex resume <session-id>`
 
 ### What's the difference from the original?
 
-This fork adds 18 commands (vs 7), aspect-based reviews (28 templates, 3 languages, 5 techstacks), multi-agent council, hypothesis debugging, ADR/FDR/IMPL/TODO document flow, knowledge extraction with auto-suggestion, cascade tracking with timestamps, batch lint on Stop, Mermaid rendering, and coding rules. The original only supports diff-based reviews.
+This fork adds 20 commands (vs 7), aspect-based reviews (28 templates, 3 languages, 5 techstacks), multi-agent council, hypothesis debugging, full document flow (ADR/FDR/TP/IMPL/TODO) with acceptance criteria hierarchy, pairwise stage validation, knowledge extraction with auto-suggestion, cascade tracking with timestamps, batch lint on Stop, Mermaid rendering, and coding rules. The original only supports diff-based reviews.
 
 ## License
 
