@@ -124,11 +124,7 @@ Follow the schema in `references/todo-schema.yaml` exactly. Key rules:
 
 ## Board Rendering
 
-Produce the Kanban board as a Mermaid diagram. Validate the syntax before embedding it:
-```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" validate "<mermaid>"
-```
-Once validation passes, embed the board directly in the TODO markdown (or alongside the YAML) as a fenced ```mermaid``` block. Do NOT call `mermaid-helper.mjs render` — the TODO does not produce .svg files.
+Produce the Kanban board as a Mermaid diagram. Validate via `node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" validate "<mermaid>"` before embedding. See mermaid-charts skill for syntax reference. Embed as fenced ```mermaid``` block — do NOT render to .svg.
 
 Also output a text summary:
 ```

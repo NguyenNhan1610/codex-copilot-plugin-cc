@@ -23,23 +23,19 @@
 
 | Task | Title | Status | Evidence |
 |------|-------|--------|----------|
-| T{NN} | {title} | Done | `{file}:{lines}` {action} at [{HH:MM}] |
-| T{NN} | {title} | Partial | {what's done}, {what's missing} |
-| T{NN} | {title} | Not started | — |
+| T{NN} | {title} | {Done/Partial/Not started} | `{file}:{lines}` {action} at [{HH:MM}] |
 
 ### FDR Edge Case Coverage
 
 | Edge Case | FDR Ref | Handled | Implementation |
 |-----------|---------|---------|----------------|
-| E{N}: {name} | FDR-{XX} {section} | Yes | `{file}:{line}` — {how it's handled} |
-| E{N}: {name} | FDR-{XX} {section} | No | Not yet implemented |
+| E{N}: {name} | FDR-{XX} {section} | {Yes/No} | `{file}:{line}` — {how handled} |
 
 ### Risk Mitigation Coverage
 
 | Risk | FDR Ref | Mitigated | Implementation |
 |------|---------|-----------|----------------|
-| R{N}: {name} | FDR-{XX} R{N} | Yes | `{file}:{lines}` — {how it's mitigated} |
-| R{N}: {name} | FDR-{XX} R{N} | No | Pending {IMPL task} |
+| R{N}: {name} | FDR-{XX} R{N} | {Yes/No} | `{file}:{lines}` — {how mitigated} |
 
 ## Summary
 
@@ -51,37 +47,28 @@
 
 | # | Time | Signal | User Request | Outcome | Files |
 |---|------|--------|-------------|---------|-------|
-| 1 | [09:20] | [NEW] | Add session caching | Implemented | 2 created |
-| 2 | [09:22] | [REVISION] | Missing tenant isolation | Fixed | 2 edits |
-| 3 | [09:24] | [ACCEPTED] | Add tests | Implemented | 1 created |
-| 4 | [09:26] | [INCOMPLETE] | Concurrent access test missing | NOT DONE | 0 |
+| 1 | [{HH:MM}] | [{TAG}] | {request summary} | {outcome} | {N} {action} |
 
 ### Quality Metrics
 
 | Metric | Value |
 |--------|-------|
 | Total prompts | {N} |
-| Accepted on first try | {N}/{total requests} |
+| Accepted on first try | {N}/{total} |
 | Revision rounds | {N} |
 | Incomplete requests | {N} |
 | Questions asked | {N} |
-| Satisfaction rate | {accepted}/{total} ({%}) |
+| Satisfaction rate | {%} |
 
 ## Session Timeline
 
+<!-- One section per cascade segment. Format: -->
+
 ### [{HH:MM}] [{TAG}]
 
-> {Full prompt text from blockquote — the user's exact words}
+> {Full prompt text from blockquote}
 
-- [{HH:MM:SS}] Created `{file}` — {description}
-  - `{file}:{lines}` — {specific implementation detail}
-- [{HH:MM:SS}] Edited `{file}` L{start}-{end} — {description}
-
-### [{HH:MM}] [{TAG}] {Next user prompt}
-
-> {Full prompt text}
-
-- [{HH:MM:SS}] Edited `{file}` L{start}-{end} — {description}
+- [{HH:MM:SS}] {Created/Edited} `{file}` L{start}-{end} — {description}
 
 ## Changes by Module
 
@@ -89,48 +76,28 @@
 
 | File | Lines | Action | Description |
 |------|-------|--------|-------------|
-| `{file}` | {start}-{end} | CREATE | {what it does} |
-| `{file}` | {start}-{end} | EDIT | {what changed} |
-
-### {another_module}/
-
-| File | Lines | Action | Description |
-|------|-------|--------|-------------|
-| `{file}` | {line} | EDIT | {what changed} |
+| `{file}` | {start}-{end} | {CREATE/EDIT} | {description} |
 
 ## Key Decisions Made
 
-{Decisions made during implementation that deviated from or refined the FDR/ADR. Each with file:line evidence.}
-
 - **Decision:** {what was decided}
   - **Reason:** {why}
-  - **Evidence:** `{file}:{line}` — {code that reflects this decision}
-  - **FDR deviation:** {how this differs from the plan, if applicable}
+  - **Evidence:** `{file}:{line}`
+  - **FDR deviation:** {if applicable}
 
 ## Architecture Impact
-
-![Architecture Impact](./REC-{NN}-{slug}-impact.svg)
-
-<details>
-<summary>Mermaid source</summary>
 
 ```mermaid
 graph TD
     subgraph Changed
-        A["{module A}"]
-        B["{module B}"]
+        A["{module}"]
     end
     subgraph Unchanged
-        C["{module C}"]
+        B["{module}"]
     end
-    A --> C
-    B --> A
-
+    A --> B
     style A fill:#d4edda
-    style B fill:#fff3cd
 ```
-
-</details>
 
 ## Test Coverage
 
@@ -142,21 +109,16 @@ graph TD
 
 | ID | Title | Source | Priority | Full Prompt |
 |----|-------|--------|----------|-------------|
-| T-AUTO-01 | {summarized from incomplete prompt} | cascade [{HH:MM}] INCOMPLETE | P1 | "{user's exact prompt text}" |
+| T-AUTO-{NN} | {summarized from incomplete prompt} | cascade [{HH:MM}] INCOMPLETE | P1 | "{prompt text}" |
 
-*These TODOs are auto-generated from cascade segments tagged [INCOMPLETE] — user requests that had no subsequent file edits.*
+*Auto-generated from cascade segments tagged [INCOMPLETE].*
 
 ## Known Gaps
 
 | Gap | Related To | Priority | Next Step |
 |-----|-----------|----------|-----------|
-| {what's missing} | {FDR-XX E{N} / IMPL T{NN}} | {High/Medium/Low} | {action to take} |
+| {what's missing} | {FDR-XX E{N} / IMPL T{NN}} | {High/Medium/Low} | {action} |
 
 ## Handoff Notes
 
-{Context for the next person picking this up. Include:}
-- What's working and verified
-- What's incomplete and why (reference auto-TODOs above)
-- Revision history: what was rejected and why (from [REVISION] tags)
-- Any gotchas or surprises encountered
-- Links to source documents for full context
+{Context for the next person: what works, what's incomplete, revision history, gotchas, links to source docs.}

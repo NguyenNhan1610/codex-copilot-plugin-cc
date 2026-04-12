@@ -22,27 +22,17 @@ Low-severity gaps: {count}
 
 ## Document Chain
 
-![Traceability Chain](./TRACE-{NN}-{slug}-chain.svg)
-
-<details>
-<summary>Mermaid source</summary>
-
 ```mermaid
 graph LR
-    ADR["ADR-05<br/>Redis Decision"]:::complete
-    FDR["FDR-03<br/>Session Caching"]:::partial
-    TP["TP-03<br/>Test Plan"]:::partial
-    IMPL["IMPL-03<br/>Task Plan"]:::partial
-    TODO["TODO-03<br/>Task Tracking"]:::partial
-    REC["REC-02<br/>Cascade Record"]:::complete
-    KB["LES-01, ANT-02<br/>Knowledge"]:::complete
+    ADR["ADR-XX"]:::complete
+    FDR["FDR-XX"]:::partial
+    TP["TP-XX"]:::partial
+    IMPL["IMPL-XX"]:::partial
+    TODO["TODO-XX"]:::partial
+    REC["REC-XX"]:::complete
+    KB["Knowledge"]:::complete
 
-    ADR --> FDR
-    FDR --> TP
-    TP --> IMPL
-    IMPL --> TODO
-    TODO --> REC
-    REC --> KB
+    ADR --> FDR --> TP --> IMPL --> TODO --> REC --> KB
 
     classDef complete fill:#d4edda,stroke:#155724
     classDef partial fill:#fff3cd,stroke:#856404
@@ -53,21 +43,19 @@ graph LR
 <!-- If ADR or TP were not generated, render them with :::na and label "Not generated".
      Missing ADR/TP are never flagged as gaps — they are optional in the chain. -->
 
-</details>
-
 | Stage | Document | Status | Link |
 |-------|----------|--------|------|
-| Decision | {ADR-XX-title} | {Accepted/Proposed/Not generated} | [Link](../adr/ADR-XX.md) |
-| Feature plan | {FDR-XX-title} | {Complete/In Progress/Missing} | [Link](../fdr/FDR-XX.md) |
-| Test plan | {TP-XX-title} | {Complete/Draft/Not generated} | [Link](../test_plans/TP-XX.md) |
-| Task plan | {IMPL-XX-title} | {Complete/In Progress/Missing} | [Link](../implementation_plans/IMPL-XX.md) |
-| Task tracking | {TODO-XX-title} | {N/M tasks complete} | [Link](../todos/TODO-XX.yaml) |
-| Cascade record | {REC-XX-title} | {Exists/Missing} | [Link](../cascades/REC-XX.md) |
-| Knowledge | {N entries} | {Extracted/Pending} | [Index](../knowledge/index.yaml) |
+| Decision | {ADR-XX or "Not generated"} | {status} | {link} |
+| Feature plan | {FDR-XX} | {status} | {link} |
+| Test plan | {TP-XX or "Not generated"} | {status} | {link} |
+| Task plan | {IMPL-XX} | {status} | {link} |
+| Task tracking | {TODO-XX} | {N/M tasks complete} | {link} |
+| Cascade record | {REC-XX or "Missing"} | {status} | {link} |
+| Knowledge | {N entries} | {status} | {link} |
 
 ## Acceptance Criteria Chain
 
-<!-- Walk the full acceptance hierarchy. Adapt to what exists in the chain:
+<!-- Walk the full acceptance hierarchy. Adapt to what exists:
      - Full chain (ADR+TP): AAC → FAC → EAC → TC
      - No ADR: skip AAC → FAC; start at FAC → EAC → TC
      - No TP: use IMPL inline test cases (iTC-) for EAC → TC
@@ -75,23 +63,23 @@ graph LR
 
 ### AAC → FAC Traceability
 
-<!-- Omit if no ADR exists -->
+<!-- Omit this section if no ADR exists -->
 
 | AAC ID | AAC Invariant | FAC IDs | Coverage |
 |--------|-------------|---------|----------|
-| AAC-{N} | {invariant from ADR} | FAC-{N}, FAC-{M} | {Full/Partial/None} |
+| AAC-{N} | {invariant} | FAC-{N}, FAC-{M} | {Full/Partial/None} |
 
 ### FAC → EAC Traceability
 
 | FAC ID | FAC Behavior | EAC IDs | Coverage |
 |--------|-------------|---------|----------|
-| FAC-{N} | {behavior from FDR} | EAC-{N}, EAC-{M} | {Full/Partial/None} |
+| FAC-{N} | {behavior} | EAC-{N}, EAC-{M} | {Full/Partial/None} |
 
 ### EAC → TC Traceability
 
 | EAC ID | EAC Gate | TC IDs | Status |
 |--------|---------|--------|--------|
-| EAC-{N} | {gate from IMPL} | {TC-{N} or iTC-{N}} | {All passing / Some failing / Not implemented} |
+| EAC-{N} | {gate} | {TC-{N} or iTC-{N}} | {All passing / Some failing / Not implemented} |
 
 ### TC → Code Verification
 
@@ -103,62 +91,51 @@ graph LR
 
 | AAC | → FAC | → EAC | → TC | → Code | End-to-End |
 |-----|-------|-------|------|--------|-----------|
-| {AAC-{N} or "—"} | FAC-{N} | EAC-{N} | {TC-{N} or iTC-{N}} | {verified/gap} | {Complete / Broken at {stage}} |
+| {AAC-{N} or "—"} | FAC-{N} | EAC-{N} | {TC/iTC} | {verified/gap} | {Complete / Broken at {stage}} |
 
 ## Edge Case Coverage
 
 | # | Edge Case | FDR Ref | IMPL Task | TODO Status | Code Exists | Test Exists | Verified |
 |---|-----------|---------|-----------|-------------|-------------|-------------|----------|
-| E1 | {name} | FDR-{XX} | T{NN} | {status} | `{file}:{line}` | `{test}:{line}` | Yes/No |
-| E5 | {name} | FDR-{XX} | T{NN} | {status} | `{file}:{line}` | `{test}:{line}` | Yes/No |
-| E6 | {name} | FDR-{XX} | T{NN} | **Not started** | **MISSING** | **MISSING** | **GAP** |
+| E{N} | {name} | FDR-{XX} | T{NN} | {status} | `{file}:{line}` | `{test}:{line}` | {Yes/No/GAP} |
 
-**Coverage: {N}/{total} edge cases verified ({percentage}%)**
+**Coverage: {N}/{total} edge cases verified ({%})**
 
 ## Risk Mitigation Coverage
 
 | # | Risk | FDR Ref | Severity | IMPL Task | Mitigated | Code Evidence | Verified |
 |---|------|---------|----------|-----------|-----------|---------------|----------|
-| R1 | {name} | FDR-{XX} | {High/Med/Low} | T{NN} | Yes/No | `{file}:{line}` | Yes/No |
-| R2 | {name} | FDR-{XX} | {severity} | T{NN} | **NO** | **MISSING** | **GAP** |
+| R{N} | {name} | FDR-{XX} | {severity} | T{NN} | {Yes/No} | `{file}:{line}` | {Yes/No/GAP} |
 
-**Coverage: {N}/{total} risks mitigated ({percentage}%)**
+**Coverage: {N}/{total} risks mitigated ({%})**
 
 ## Task Completion
 
 | Task | IMPL Ref | Track | TODO Status | Cascade Evidence | Code Verified |
 |------|----------|-------|-------------|-----------------|---------------|
-| T02 | {title} | {track} | Complete | [{HH:MM}] `{file}` | Yes — file exists, {N} lines |
-| T06 | {title} | {track} | In Progress | [{HH:MM}] `{file}` | Partial — {N}/{M} functions |
-| T09 | {title} | {track} | **Blocked** | No entry | **GAP** |
+| T{NN} | {title} | {track} | {status} | [{HH:MM}] `{file}` | {Yes/Partial/GAP} |
 
-**Completion: {N}/{total} tasks done ({percentage}%)**
+**Completion: {N}/{total} tasks done ({%})**
 
 ## Test Coverage
 
 | Test | File:Line | IMPL Task | Edge Cases | Status |
 |------|-----------|-----------|-----------|--------|
-| {test_name} | `{file}:{line}` | T{NN} | E{N} | Passing |
-| {test_name} | `{file}:{line}` | T{NN} | E{N} | Failing |
-| **MISSING** | — | T{NN} | E{N} | **Not written** |
+| {test_name} | `{file}:{line}` | T{NN} | E{N} | {Passing/Failing/Not written} |
 
-**Coverage: {N}/{total} test tasks have tests ({percentage}%)**
+**Coverage: {N}/{total} test tasks have tests ({%})**
 
 ## Knowledge Applied
 
 | Entry | Type | Relevant | Applied | Where |
 |-------|------|----------|---------|-------|
-| {LES-01} | Lesson | Yes | Yes | `{file}:{line}` |
-| {ANT-02} | Antipattern | Yes | Yes | `{file}:{line}` |
-| {PAT-01} | Pattern | Yes | **Not applied** | **GAP** |
+| {ID} | {type} | {Yes} | {Yes/Not applied} | `{file}:{line}` or GAP |
 
 ## Gaps Summary
 
 | # | Gap | Severity | Source | Impact | Action Needed |
 |---|-----|----------|--------|--------|---------------|
-| G1 | {what's missing} | High | {FDR-XX E{N}} | {impact if shipped} | {specific action} |
-| G2 | {what's missing} | Medium | {IMPL-XX T{NN}} | {impact} | {action} |
-| G3 | {what's missing} | Low | — | {impact} | {action} |
+| G{N} | {what's missing} | {High/Medium/Low} | {source ref} | {impact if shipped} | {specific action} |
 
 ## Coverage Summary
 

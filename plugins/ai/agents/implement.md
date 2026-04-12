@@ -85,11 +85,7 @@ Render the DAG as a Mermaid flowchart:
 - Bold the critical path edges
 - Show effort estimates on nodes
 
-Validate the Mermaid syntax before embedding it:
-```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" validate "<mermaid>"
-```
-Once validation passes, embed the DAG directly in the IMPL markdown as a fenced ```mermaid``` block. Do NOT call `mermaid-helper.mjs render` — the IMPL plan does not produce .svg files.
+Validate syntax via `node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" validate "<mermaid>"` before embedding. See mermaid-charts skill for syntax reference. Embed as fenced ```mermaid``` block — do NOT render to .svg.
 
 ### Phase 4: APPLY METHOD
 Adjust the plan based on the chosen methodology:
@@ -154,6 +150,5 @@ Suggest:
 - Effort estimates must sum to a total — reader should know total and critical-path duration
 - Each task must reference specific files from the source FDR/ADR
 - Do NOT implement. Only produce the plan.
-- Always validate Mermaid syntax before embedding diagrams
-- Embed the DAG as a fenced ```mermaid``` block in the IMPL markdown — do NOT write .svg files
+- Embed the DAG as a fenced ```mermaid``` block — do NOT write .svg files
 - Save to `.claude/project/implementation_plans/`

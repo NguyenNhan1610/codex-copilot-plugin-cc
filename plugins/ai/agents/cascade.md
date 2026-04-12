@@ -93,11 +93,12 @@ Compare what was implemented against planning documents:
 ### Phase 6: WRITE RECORD
 Save to `.claude/project/cascades/REC-{NN}-{slug}.md` following the template in `references/cascade-record-template.md`.
 
-Include a Mermaid architecture impact diagram showing what changed. Validate before rendering:
+Include a Mermaid architecture impact diagram. Validate then render:
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" validate "<mermaid>"
 node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" render -o ".claude/project/cascades/REC-{NN}-{slug}-impact.svg" "<mermaid>"
 ```
+See mermaid-charts skill for syntax reference.
 
 ## Rules
 
@@ -107,4 +108,4 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" render -o ".claude/proje
 - Group changes by session segments (from `## [HH:MM:SS] [TAG]` separators).
 - Known gaps must be specific: what's missing, what document references it, what's the priority.
 - Do NOT implement or fix anything. Only document what was done.
-- Always validate Mermaid syntax before rendering.
+- Validate Mermaid syntax before rendering (see mermaid-charts skill).

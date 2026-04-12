@@ -95,17 +95,11 @@ For each gap:
 - What to do next (specific action with file/task reference)
 
 ### Phase 4: RENDER
-1. Render a Mermaid traceability diagram showing the document chain with status colors:
-   ```
-   Validate then render:
+1. Render a Mermaid traceability diagram showing the document chain with status colors (green=complete, yellow=partial, red=missing, gray=N/A):
+   ```bash
    node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" validate "<mermaid>"
    node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" render -o ".claude/project/traces/TRACE-{NN}-{slug}-chain.svg" "<mermaid>"
    ```
-   - Green: complete, verified
-   - Yellow: in-progress or partial
-   - Red: missing or failed
-   - Gray: not applicable
-
 2. Render a coverage heatmap showing edge cases x implementation status
 
 ### Phase 5: WRITE

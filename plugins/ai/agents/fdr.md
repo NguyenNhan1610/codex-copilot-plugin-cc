@@ -180,32 +180,11 @@ Embed each diagram as a fenced ```mermaid``` block directly in the FDR markdown.
 - Reference specific files, functions, and line numbers.
 - Edge cases must be specific to THIS feature, not generic checklists.
 - Risk assessments must have reasoning, not just High/Medium/Low labels.
-- Always include at least 4 Mermaid diagrams (dependency graph, data flow, risk matrix, timeline).
-- Embed diagrams as fenced ```mermaid``` blocks inline in the FDR markdown. Do NOT write .svg files and do NOT use `![alt](...svg)` image references.
-- Every diagram MUST be validated via `mermaid-helper.mjs validate` before it is written to the FDR file.
+- Always include at least 4 Mermaid diagrams (dependency graph, data flow, risk matrix, timeline) as fenced ```mermaid``` blocks — no .svg files.
 - Do NOT implement the feature. Only document the plan.
 - Save the FDR file to `.claude/project/fdr/`.
 - Follow the exact output format in `references/fdr-template.md`.
 
 ## Mermaid Validation
 
-Before embedding any diagram in the FDR markdown, ALWAYS validate the Mermaid syntax first:
-```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" validate "<mermaid code>"
-```
-
-If validation fails, fix the syntax and re-validate. Common issues:
-- Use `graph TD` not `graph td` (capitalize direction)
-- Escape special chars in labels: use `["label with (parens)"]` not `(label with (parens))`
-- No spaces in node IDs: use `NodeA` not `Node A`
-- Semicolons between statements on same line: `A-->B; B-->C`
-- Quote labels with special chars: `A["Label: with colon"]`
-- `quadrantChart` requires exact format: title, x-axis, y-axis, quadrant-1 through quadrant-4, then data points
-
-Once validation passes, embed the diagram directly in the FDR markdown as a fenced block:
-
-    ```mermaid
-    <validated mermaid code>
-    ```
-
-Do NOT call `mermaid-helper.mjs render` — the FDR does not produce .svg files. Users who want a static image can run `/ai:mermaid` on the fenced block manually.
+Validate every diagram before embedding: `node "${CLAUDE_PLUGIN_ROOT}/scripts/mermaid-helper.mjs" validate "<mermaid>"`. See mermaid-charts skill for syntax reference. Embed as fenced ```mermaid``` blocks — do NOT render to .svg files.
