@@ -12,8 +12,11 @@ Use Codex or GitHub Copilot from inside Claude Code for code reviews, multi-agen
 
 | Situation | Command |
 |-----------|---------|
-| Quick review of changes | `/ai:review` |
-| Deep review (security, perf, arch) | `/ai:review python/fastapi:security` |
+| Full codebase review | `/ai:review` |
+| Aspect-focused codebase review | `/ai:review python/fastapi:security` |
+| Bug-finding review with P0-P3 tags | `/ai:finding-review` |
+| Quick git diff review | `/ai:git-review` |
+| Commit impact analysis | `/ai:git-effect-review` |
 | Challenge design decisions | `/ai:adversarial-review` |
 | Multiple perspectives | `/ai:council --roles security,performance` |
 | Investigate a bug | `/ai:debug The API returns 500` |

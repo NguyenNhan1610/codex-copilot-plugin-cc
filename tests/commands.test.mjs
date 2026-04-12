@@ -21,23 +21,15 @@ test("review command uses AskUserQuestion and background Bash while staying revi
   assert.match(source, /```bash/);
   assert.match(source, /```typescript/);
   assert.match(source, /review "\$ARGUMENTS"/);
-  assert.match(source, /\[--scope auto\|working-tree\|branch\]/);
   assert.match(source, /run_in_background:\s*true/);
   assert.match(source, /command:\s*`node "\$\{CLAUDE_PLUGIN_ROOT\}\/scripts\/ai-companion\.mjs" review "\$ARGUMENTS"`/);
-  assert.match(source, /description:\s*"AI review"/);
   assert.match(source, /Do not call `BashOutput`/);
   assert.match(source, /Return the command stdout verbatim, exactly as-is/i);
-  assert.match(source, /git status --short --untracked-files=all/);
-  assert.match(source, /git diff --shortstat/);
-  assert.match(source, /Treat untracked files or directories as reviewable work/i);
-  assert.match(source, /Recommend waiting only when the review is clearly tiny, roughly 1-2 files total/i);
-  assert.match(source, /In every other case, including unclear size, recommend background/i);
-  assert.match(source, /The companion script parses `--wait` and `--background`/i);
-  assert.match(source, /Claude Code's `Bash\(..., run_in_background: true\)` is what actually detaches the run/i);
-  assert.match(source, /When in doubt, run the review/i);
   assert.match(source, /\(Recommended\)/);
   assert.match(source, /accepts an optional aspect specifier as the first positional argument/i);
   assert.match(source, /--model <provider:model>/);
+  assert.match(source, /full codebase/i);
+  assert.match(source, /does not support `--base` or `--scope`/i);
 });
 
 test("adversarial review command uses AskUserQuestion and background Bash while staying review-only", () => {
@@ -62,7 +54,7 @@ test("adversarial review command uses AskUserQuestion and background Bash while 
   assert.match(source, /--model <provider:model>/);
 });
 
-test("plugin exposes exactly 20 unified commands", () => {
+test("plugin exposes exactly 23 unified commands", () => {
   const commandFiles = fs.readdirSync(path.join(PLUGIN_ROOT, "commands")).sort();
   assert.deepEqual(commandFiles, [
     "adversarial-review.md",
@@ -72,6 +64,9 @@ test("plugin exposes exactly 20 unified commands", () => {
     "council.md",
     "debug.md",
     "feature-development-record.md",
+    "finding-review.md",
+    "git-effect-review.md",
+    "git-review.md",
     "implement.md",
     "knowledge.md",
     "lint.md",

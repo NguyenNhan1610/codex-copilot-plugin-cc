@@ -1,11 +1,12 @@
 ---
-description: Run an AI code review against local git state
-argument-hint: '[--model <provider:model>] [--wait|--background] [--base <ref>] [--scope auto|working-tree|branch] [language[/techstack]:aspect]'
+description: Run a full codebase AI review, optionally focused on a specific aspect
+argument-hint: '[--model <provider:model>] [--wait|--background] [language[/techstack]:aspect]'
 allowed-tools: Read, Glob, Grep, Bash(node:*), Bash(git:*), AskUserQuestion
 ---
 
-Run an AI code review through the shared plugin runtime.
-The provider (Codex, Copilot, Claude) is selected via `--model provider:model` or the default from config. For Claude, the tier aliases are `claude:fast` (Haiku, cheap and quick), `claude:code` (Sonnet, the default for code review), and `claude:max` (Opus with 1M context, strongest).
+Run a full codebase review through the shared plugin runtime.
+Reviews the entire codebase (not just diffs). Optionally filter by aspect (security, performance, architecture, antipatterns) and/or language/techstack.
+The provider (Codex, Copilot, Claude) is selected via `--model provider:model` or the default from config. For full codebase reviews `--model claude:max` (Opus with 1M context) is recommended for best results.
 
 Raw slash-command arguments:
 `$ARGUMENTS`
@@ -18,33 +19,22 @@ Core constraint:
 Execution mode rules:
 - If the raw arguments include `--wait`, do not ask. Run the review in the foreground.
 - If the raw arguments include `--background`, do not ask. Run the review in a Claude background task.
-- Otherwise, estimate the review size before asking:
-  - For working-tree review, start with `git status --short --untracked-files=all`.
-  - For working-tree review, also inspect both `git diff --shortstat --cached` and `git diff --shortstat`.
-  - For base-branch review, use `git diff --shortstat <base>...HEAD`.
-  - Treat untracked files or directories as reviewable work even when `git diff --shortstat` is empty.
-  - Only conclude there is nothing to review when the relevant working-tree status is empty or the explicit branch diff is empty.
-  - Recommend waiting only when the review is clearly tiny, roughly 1-2 files total and no sign of a broader directory-sized change.
-  - In every other case, including unclear size, recommend background.
-  - When in doubt, run the review instead of declaring that there is nothing to review.
+- Otherwise, always recommend background (full codebase reviews are large and take significant time).
 - Then use `AskUserQuestion` exactly once with two options, putting the recommended option first and suffixing its label with `(Recommended)`:
-  - `Wait for results`
   - `Run in background`
+  - `Wait for results`
 
 Argument handling:
 - Preserve the user's arguments exactly.
 - Do not strip `--wait` or `--background` yourself.
 - Do not add extra review instructions or rewrite the user's intent.
-- The companion script parses `--wait` and `--background`, but Claude Code's `Bash(..., run_in_background: true)` is what actually detaches the run.
 - `/ai:review` accepts an optional aspect specifier as the first positional argument.
 - Valid aspects: `security`, `performance`, `architecture`, `antipatterns`
 - Aspect format: `aspect` or `language:aspect` or `language/techstack:aspect`
   - Examples: `security`, `python:performance`, `python/fastapi:security`, `typescript/nextjs:architecture`
-- When an aspect is provided, the review reads the full codebase (not just diffs) and uses a dedicated prompt template.
-- When no aspect is provided, behave as before (diff-based native review when backend supports it).
-- Aspect-based review does not accept additional free-form focus text.
-- `--base` and `--scope` are ignored for aspect-based reviews since they review the full codebase.
-- For custom review instructions or adversarial framing, use `/ai:adversarial-review`.
+- When an aspect is provided, the review uses a dedicated prompt template for that aspect.
+- When no aspect is provided, the review does a comprehensive general sweep.
+- This command does not support `--base` or `--scope` — it always reviews the full codebase. For diff-based reviews, use `/ai:git-review` or `/ai:finding-review`.
 
 Foreground flow:
 - Run:
@@ -60,9 +50,9 @@ Background flow:
 ```typescript
 Bash({
   command: `node "${CLAUDE_PLUGIN_ROOT}/scripts/ai-companion.mjs" review "$ARGUMENTS"`,
-  description: "AI review",
+  description: "AI codebase review",
   run_in_background: true
 })
 ```
 - Do not call `BashOutput` or wait for completion in this turn.
-- After launching the command, tell the user: "Review started in the background. Check `/ai:status` for progress."
+- After launching the command, tell the user: "Codebase review started in the background. Check `/ai:status` for progress."

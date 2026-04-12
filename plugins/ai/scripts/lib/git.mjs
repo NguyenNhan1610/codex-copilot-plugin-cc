@@ -280,3 +280,92 @@ export function collectReviewContext(cwd, target) {
     ...details
   };
 }
+
+export function collectCommitEffectContext(cwd, commitRef = "HEAD") {
+  const repoRoot = getRepoRoot(cwd);
+  const currentBranch = getCurrentBranch(cwd);
+
+  // Resolve the commit ref
+  const resolved = git(repoRoot, ["rev-parse", "--short", commitRef]);
+  if (resolved.status !== 0) {
+    throw new Error(`Cannot resolve commit: ${commitRef}`);
+  }
+  const shortHash = resolved.stdout.trim();
+
+  // Get commit metadata
+  const showResult = git(repoRoot, ["show", "--stat", "--no-patch", commitRef]);
+  const commitMeta = showResult.status === 0 ? showResult.stdout.trim() : `Commit: ${shortHash}`;
+
+  // Get the commit diff
+  const diffResult = git(repoRoot, ["diff", `${commitRef}~1`, commitRef]);
+  const commitDiff = diffResult.status === 0 ? diffResult.stdout.trim() : "";
+
+  // Get list of changed files
+  const namesResult = git(repoRoot, ["diff", "--name-only", `${commitRef}~1`, commitRef]);
+  const changedFiles = namesResult.status === 0
+    ? namesResult.stdout.trim().split("\n").filter(Boolean)
+    : [];
+
+  // For each changed file that still exists, read current content and find importers
+  const parts = [`## Commit\n\n${commitMeta}`, `## Commit Diff\n\n\`\`\`diff\n${commitDiff}\n\`\`\``];
+
+  const currentFiles = [];
+  for (const filePath of changedFiles) {
+    const fullPath = path.join(repoRoot, filePath);
+    try {
+      const stat = fs.statSync(fullPath);
+      if (stat.size > MAX_FILE_BYTES) continue;
+      const buffer = fs.readFileSync(fullPath);
+      if (!isProbablyText(buffer)) continue;
+      currentFiles.push({ path: filePath, content: buffer.toString("utf8") });
+    } catch { /* file may have been deleted by the commit — skip */ }
+  }
+
+  if (currentFiles.length > 0) {
+    parts.push("## Current State of Changed Files");
+    for (const { path: fp, content } of currentFiles) {
+      parts.push(`### ${fp}\n\n\`\`\`\n${content.trimEnd()}\n\`\`\``);
+    }
+  }
+
+  // Find files that import/reference the changed files (dependents)
+  const dependentFiles = new Set();
+  for (const filePath of changedFiles) {
+    const baseName = path.basename(filePath, path.extname(filePath));
+    const grepResult = git(repoRoot, [
+      "grep", "-l", "--no-color", "-E",
+      `(import|require|from).*${baseName}`,
+      "--", "*.ts", "*.tsx", "*.js", "*.jsx", "*.mjs", "*.py", "*.dart"
+    ]);
+    if (grepResult.status === 0) {
+      for (const dep of grepResult.stdout.trim().split("\n").filter(Boolean)) {
+        if (!changedFiles.includes(dep)) dependentFiles.add(dep);
+      }
+    }
+  }
+
+  if (dependentFiles.size > 0) {
+    parts.push("## Downstream Dependents (files that import changed files)");
+    for (const dep of [...dependentFiles].slice(0, 20)) {
+      const fullPath = path.join(repoRoot, dep);
+      try {
+        const stat = fs.statSync(fullPath);
+        if (stat.size > MAX_FILE_BYTES) continue;
+        const buffer = fs.readFileSync(fullPath);
+        if (!isProbablyText(buffer)) continue;
+        parts.push(`### ${dep}\n\n\`\`\`\n${buffer.toString("utf8").trimEnd()}\n\`\`\``);
+      } catch { /* skip */ }
+    }
+  }
+
+  return {
+    cwd: repoRoot,
+    repoRoot,
+    branch: currentBranch,
+    commitRef: shortHash,
+    target: { mode: "commit-effect", label: `commit ${shortHash} impact`, explicit: true },
+    mode: "commit-effect",
+    summary: `Analyzing impact of commit ${shortHash} on ${changedFiles.length} changed file(s) with ${dependentFiles.size} dependent(s).`,
+    content: parts.join("\n\n")
+  };
+}

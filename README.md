@@ -53,15 +53,18 @@ A high-quality fork of [openai/codex-plugin-cc](https://github.com/openai/codex-
 | Traceability | None | **`/ai:trace`** — verify completeness with 3 parallel sub-agents + ship/no-ship verdict |
 | Project init | None | **`/ai:setup --init`** — creates project dirs + appends to CLAUDE.md |
 
-## Commands (20)
+## Commands (23)
 
 ### Review & Analysis
 
 | Command | Description |
 |---------|-------------|
-| `/ai:review` | Standard or aspect-based code review |
+| `/ai:review` | Full codebase review (general or aspect-focused) |
 | `/ai:review security` | Full codebase security audit |
 | `/ai:review python/fastapi:performance` | FastAPI-specific performance review |
+| `/ai:finding-review` | Bug-finding review with P0-P3 priority tags on recent changes |
+| `/ai:git-review` | Quick git diff review (native backend when available) |
+| `/ai:git-effect-review [commit]` | Commit impact analysis — risk/breaking changes on codebase |
 | `/ai:adversarial-review` | Challenge review that questions design choices |
 | `/ai:council --roles security,performance` | Multi-agent discussion with debate |
 | `/ai:debug` | Hypothesis-based debugging with Mermaid decision trees |
@@ -163,20 +166,24 @@ Planning commands (`/ai:feature-development-record`, `/ai:implement`, `/ai:todo`
 
 Templates load only relevant fragments per scope, keeping context lean.
 
-## Aspect-Based Code Review
+## Code Review Commands
 
-Review the full codebase through a specific lens with deep, language-specific expertise.
+Five focused review commands, each with a clear purpose:
 
 ```bash
-/ai:review security                        # Generic security audit
-/ai:review python:performance              # Python performance review
-/ai:review python/fastapi:security         # FastAPI-specific security
-/ai:review typescript/nextjs:performance   # Next.js App Router performance
-/ai:review dart/flutter:architecture       # Flutter architecture review
-/ai:review --base main                     # Diff-based review (no aspect)
+/ai:review                                 # Full codebase general review
+/ai:review security                        # Full codebase security audit
+/ai:review python/fastapi:performance      # Full codebase, FastAPI performance focus
+/ai:finding-review                         # Bug-finding on recent changes (P0-P3 tags)
+/ai:finding-review --base main             # Bug-finding on branch diff
+/ai:git-review                             # Quick diff review (native backend)
+/ai:git-review --base main                 # Quick branch diff review
+/ai:git-effect-review                      # Impact analysis of last commit
+/ai:git-effect-review abc123               # Impact analysis of specific commit
+/ai:adversarial-review                     # Challenge design decisions
 ```
 
-**Aspects:** `security`, `performance`, `architecture`, `antipatterns`
+**Aspects** (for `/ai:review`): `security`, `performance`, `architecture`, `antipatterns`
 
 **28 prompt templates** across 3 languages (Python, TypeScript, Dart) and 5 techstacks (FastAPI, Django, Next.js, Flutter + generic).
 
@@ -408,7 +415,7 @@ Yes. Use `--model copilot:model-name` on any command, or `/ai:setup --provider c
 
 ### Does the plugin modify my code?
 
-Reviews, council, debug, ADR, FDR, test-plan, implement, validate, trace are **read-only**. Only `/ai:rescue` can make changes. `/ai:lint --fix` auto-fixes safe issues.
+All review commands (review, finding-review, git-review, git-effect-review, adversarial-review), council, debug, ADR, FDR, test-plan, implement, validate, trace are **read-only**. Only `/ai:rescue` can make changes. `/ai:lint --fix` auto-fixes safe issues.
 
 ### Can I resume work in Codex?
 
@@ -416,7 +423,7 @@ Yes. `/ai:result` includes the Codex session ID. Run `codex resume <session-id>`
 
 ### What's the difference from the original?
 
-This fork adds 20 commands (vs 7), aspect-based reviews (28 templates, 3 languages, 5 techstacks), multi-agent council, hypothesis debugging, full document flow (ADR/FDR/TP/IMPL/TODO) with acceptance criteria hierarchy, pairwise stage validation, knowledge extraction with auto-suggestion, cascade tracking with timestamps, batch lint on Stop, Mermaid rendering, and coding rules. The original only supports diff-based reviews.
+This fork adds 23 commands (vs 7), 5 focused review commands, aspect-based reviews (28 templates, 3 languages, 5 techstacks), multi-agent council, hypothesis debugging, full document flow (ADR/FDR/TP/IMPL/TODO) with acceptance criteria hierarchy, pairwise stage validation, knowledge extraction with auto-suggestion, cascade tracking with timestamps, batch lint on Stop, Mermaid rendering, and coding rules. The original only supports diff-based reviews.
 
 ## License
 

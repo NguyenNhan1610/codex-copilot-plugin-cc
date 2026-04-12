@@ -20,7 +20,7 @@ registerBackend(createCodexBackend());
 registerBackend(createCopilotBackend());
 registerBackend(createClaudeBackend());
 import { readStdinIfPiped } from "./lib/fs.mjs";
-import { collectReviewContext, collectFullCodebaseContext, ensureGitRepository, resolveReviewTarget } from "./lib/git.mjs";
+import { collectReviewContext, collectFullCodebaseContext, collectCommitEffectContext, ensureGitRepository, resolveReviewTarget } from "./lib/git.mjs";
 import { binaryAvailable, terminateProcessTree } from "./lib/process.mjs";
 import { loadPromptTemplate, interpolateTemplate, resolveAspectTemplate, loadCouncilPromptTemplate } from "./lib/prompts.mjs";
 import {
@@ -75,8 +75,11 @@ function printUsage() {
     [
       "Usage:",
       "  node scripts/ai-companion.mjs setup [--provider <codex|copilot|claude>] [--enable-review-gate|--disable-review-gate] [--json]",
-      "  node scripts/ai-companion.mjs review [--model <provider:model>] [--wait|--background] [--base <ref>] [--scope <auto|working-tree|branch>] [language[/techstack]:aspect]",
+      "  node scripts/ai-companion.mjs review [--model <provider:model>] [--wait|--background] [language[/techstack]:aspect]",
       "  node scripts/ai-companion.mjs adversarial-review [--model <provider:model>] [--wait|--background] [--base <ref>] [--scope <auto|working-tree|branch>] [focus text]",
+      "  node scripts/ai-companion.mjs finding-review [--model <provider:model>] [--wait|--background] [--base <ref>] [--scope <auto|working-tree|branch>]",
+      "  node scripts/ai-companion.mjs git-review [--model <provider:model>] [--wait|--background] [--base <ref>] [--scope <auto|working-tree|branch>]",
+      "  node scripts/ai-companion.mjs git-effect-review [--model <provider:model>] [--wait|--background] [commit-hash]",
       "  node scripts/ai-companion.mjs council [--model <provider:model>] [--roles <role1,role2,...>] [topic text]",
       "  node scripts/ai-companion.mjs task [--model <provider:model>] [--background] [--write] [--resume-last|--resume|--fresh] [--effort <none|minimal|low|medium|high|xhigh>] [prompt]",
       "  node scripts/ai-companion.mjs status [job-id] [--all] [--json]",
@@ -529,10 +532,35 @@ Support commands: \`/ai:debug\` (hypothesis-based debugging) · \`/ai:council\` 
   outputResult(options.json ? finalReport : renderSetupReport(finalReport), options.json);
 }
 
-function buildStandardReviewPrompt(context) {
-  const template = loadPromptTemplate(ROOT_DIR, "review");
+function buildCodebaseReviewPrompt(context) {
+  const template = loadPromptTemplate(ROOT_DIR, "codebase-review");
   return interpolateTemplate(template, {
     TARGET_LABEL: context.target.label,
+    REVIEW_INPUT: context.content
+  });
+}
+
+function buildFindingReviewPrompt(context) {
+  const template = loadPromptTemplate(ROOT_DIR, "finding-review");
+  return interpolateTemplate(template, {
+    TARGET_LABEL: context.target.label,
+    REVIEW_INPUT: context.content
+  });
+}
+
+function buildGitReviewPrompt(context) {
+  const template = loadPromptTemplate(ROOT_DIR, "git-review");
+  return interpolateTemplate(template, {
+    TARGET_LABEL: context.target.label,
+    REVIEW_INPUT: context.content
+  });
+}
+
+function buildGitEffectReviewPrompt(context) {
+  const template = loadPromptTemplate(ROOT_DIR, "git-effect-review");
+  return interpolateTemplate(template, {
+    TARGET_LABEL: context.target.label,
+    COMMIT_REF: context.commitRef || "HEAD",
     REVIEW_INPUT: context.content
   });
 }
@@ -888,16 +916,29 @@ async function executeReviewRun(request, backend) {
     };
   }
 
-  const context = request.aspectOverride
-    ? collectFullCodebaseContext(request.cwd)
-    : collectReviewContext(request.cwd, target);
+  const useFullCodebase = request.aspectOverride || reviewName === "Codebase Review";
+  const useCommitEffect = reviewName === "Git Effect Review";
+  let context;
+  if (useCommitEffect) {
+    context = collectCommitEffectContext(request.cwd, request.commitRef || "HEAD");
+  } else if (useFullCodebase) {
+    context = collectFullCodebaseContext(request.cwd);
+  } else {
+    context = collectReviewContext(request.cwd, target);
+  }
   let prompt;
   if (request.aspectOverride) {
     prompt = buildAspectReviewPrompt(context, request.aspectOverride);
   } else if (reviewName === "Adversarial Review") {
     prompt = buildAdversarialReviewPrompt(context, focusText);
+  } else if (reviewName === "Codebase Review") {
+    prompt = buildCodebaseReviewPrompt(context);
+  } else if (reviewName === "Finding Review") {
+    prompt = buildFindingReviewPrompt(context);
+  } else if (reviewName === "Git Effect Review") {
+    prompt = buildGitEffectReviewPrompt(context);
   } else {
-    prompt = buildStandardReviewPrompt(context);
+    prompt = buildGitReviewPrompt(context);
   }
   const result = await backend.runTurn(context.repoRoot, {
     prompt,
@@ -1021,13 +1062,20 @@ async function executeTaskRun(request, backend) {
   };
 }
 
+const REVIEW_KIND_MAP = {
+  "Codebase Review": "review",
+  "Adversarial Review": "adversarial-review",
+  "Finding Review": "finding-review",
+  "Git Review": "git-review",
+  "Git Effect Review": "git-effect-review"
+};
+
 function buildReviewJobMetadata(reviewName, target, backend = null) {
   const displayName = backend?.displayName ?? "AI";
-  const isAdversarial = reviewName === "Adversarial Review";
-  const isStandardReview = reviewName === "Review";
+  const kind = REVIEW_KIND_MAP[reviewName] ?? "aspect-review";
   return {
-    kind: isAdversarial ? "adversarial-review" : isStandardReview ? "review" : "aspect-review",
-    title: isStandardReview ? `${displayName} Review` : `${displayName} ${reviewName}`,
+    kind,
+    title: `${displayName} ${reviewName}`,
     summary: `${reviewName} ${target.label}`
   };
 }
@@ -1056,9 +1104,8 @@ function renderQueuedTaskLaunch(payload) {
 }
 
 function getJobKindLabel(kind, jobClass) {
-  if (kind === "adversarial-review") {
-    return "adversarial-review";
-  }
+  const REVIEW_KINDS = new Set(["adversarial-review", "finding-review", "git-review", "git-effect-review"]);
+  if (REVIEW_KINDS.has(kind)) return kind;
   return jobClass === "review" ? "review" : "rescue";
 }
 
@@ -1188,15 +1235,24 @@ async function handleReviewCommand(argv, config, backend, resolvedModel = null) 
 
   const cwd = resolveCommandCwd(options);
   const workspaceRoot = resolveCommandWorkspace(options);
+  const useFullCodebase = config.aspectOverride || config.reviewName === "Codebase Review";
+  const useCommitEffect = config.reviewName === "Git Effect Review";
   const effectivePositionals = config.aspectOverride
     ? positionals.slice(1)
-    : positionals;
+    : useCommitEffect ? [] : positionals;
   const focusText = effectivePositionals.join(" ").trim();
-  const target = config.aspectOverride
-    ? { mode: "full", label: "full codebase", explicit: true }
-    : resolveReviewTarget(cwd, { base: options.base, scope: options.scope });
 
-  if (!config.aspectOverride) config.validateRequest?.(target, focusText);
+  let target;
+  if (useCommitEffect) {
+    const commitRef = config.commitRef || "HEAD";
+    target = { mode: "commit-effect", label: `commit ${commitRef} impact`, explicit: true };
+  } else if (useFullCodebase) {
+    target = { mode: "full", label: "full codebase", explicit: true };
+  } else {
+    target = resolveReviewTarget(cwd, { base: options.base, scope: options.scope });
+  }
+
+  if (!useFullCodebase && !useCommitEffect) config.validateRequest?.(target, focusText);
   const metadata = buildReviewJobMetadata(config.reviewName, target, backend);
   const job = createCompanionJob({
     prefix: "review",
@@ -1217,6 +1273,7 @@ async function handleReviewCommand(argv, config, backend, resolvedModel = null) 
         focusText,
         reviewName: config.reviewName,
         aspectOverride: config.aspectOverride ?? null,
+        commitRef: config.commitRef ?? null,
         onProgress: progress
       }, backend),
     { json: options.json }
@@ -1225,28 +1282,55 @@ async function handleReviewCommand(argv, config, backend, resolvedModel = null) 
 
 async function handleReview(argv, backend, resolvedModel = null) {
   const { positionals: prePositionals } = parseCommandInput(argv, {
-    valueOptions: ["base", "scope", "cwd", "model"],
+    valueOptions: ["cwd", "model"],
     booleanOptions: ["json", "background", "wait"]
   });
 
   const aspectArg = prePositionals[0] ? parseAspectArg(prePositionals[0]) : null;
 
-  if (!aspectArg) {
+  if (aspectArg) {
+    const aspectLabel = [
+      aspectArg.language ? capitalize(aspectArg.language) : null,
+      aspectArg.techstack ? capitalize(aspectArg.techstack) : null,
+      capitalize(aspectArg.aspect)
+    ].filter(Boolean).join(" ");
+
     return handleReviewCommand(argv, {
-      reviewName: "Review",
-      validateRequest: backend.supportsNativeReview ? validateNativeReviewRequest : null
+      reviewName: `${aspectLabel} Review`,
+      aspectOverride: aspectArg
     }, backend, resolvedModel);
   }
 
-  const aspectLabel = [
-    aspectArg.language ? capitalize(aspectArg.language) : null,
-    aspectArg.techstack ? capitalize(aspectArg.techstack) : null,
-    capitalize(aspectArg.aspect)
-  ].filter(Boolean).join(" ");
+  // Full codebase review (no aspect) — always full codebase, never diff
+  return handleReviewCommand(argv, {
+    reviewName: "Codebase Review"
+  }, backend, resolvedModel);
+}
+
+async function handleFindingReview(argv, backend, resolvedModel = null) {
+  return handleReviewCommand(argv, {
+    reviewName: "Finding Review"
+  }, backend, resolvedModel);
+}
+
+async function handleGitReview(argv, backend, resolvedModel = null) {
+  return handleReviewCommand(argv, {
+    reviewName: "Git Review",
+    validateRequest: backend.supportsNativeReview ? validateNativeReviewRequest : null
+  }, backend, resolvedModel);
+}
+
+async function handleGitEffectReview(argv, backend, resolvedModel = null) {
+  const { positionals } = parseCommandInput(argv, {
+    valueOptions: ["cwd", "model"],
+    booleanOptions: ["json", "background", "wait"]
+  });
+
+  const commitRef = positionals[0] || "HEAD";
 
   return handleReviewCommand(argv, {
-    reviewName: `${aspectLabel} Review`,
-    aspectOverride: aspectArg
+    reviewName: "Git Effect Review",
+    commitRef
   }, backend, resolvedModel);
 }
 
@@ -1600,6 +1684,15 @@ async function main() {
       await handleReviewCommand(argv, {
         reviewName: "Adversarial Review"
       }, backend, resolvedModel);
+      break;
+    case "finding-review":
+      await handleFindingReview(argv, backend, resolvedModel);
+      break;
+    case "git-review":
+      await handleGitReview(argv, backend, resolvedModel);
+      break;
+    case "git-effect-review":
+      await handleGitEffectReview(argv, backend, resolvedModel);
       break;
     case "council":
       await handleCouncil(argv, backend, resolvedModel);
