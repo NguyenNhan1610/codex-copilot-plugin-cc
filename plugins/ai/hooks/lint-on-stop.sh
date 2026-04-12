@@ -31,7 +31,7 @@ cascade_file="$cwd/.claude/cascades/$safe_branch.md"
 
 # Extract unique file paths from the last session segment (after last ## [ separator)
 # Get content after the last "## [" header
-last_segment=$(tac "$cascade_file" | sed '/^## \[/q' | tac)
+last_segment=$(tac "$cascade_file" | sed '/^## \[/q' | tac) || true
 
 # Extract file paths from entries like: - [HH:MM:SS] EDIT `path/to/file` L123
 py_files=()

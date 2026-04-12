@@ -51,7 +51,7 @@ if ! tail -n 500 "$cascade_file" 2>/dev/null \
 fi
 
 # Extract the last session segment (entries after the most recent "## [" header).
-last_segment=$(tac "$cascade_file" | sed '/^## \[/q' | tac)
+last_segment=$(tac "$cascade_file" | sed '/^## \[/q' | tac) || true
 
 cwd_abs=$(cd "$cwd" && pwd -P 2>/dev/null || echo "$cwd")
 
