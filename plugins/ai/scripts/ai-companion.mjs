@@ -529,6 +529,14 @@ Support commands: \`/ai:debug\` (hypothesis-based debugging) · \`/ai:council\` 
   outputResult(options.json ? finalReport : renderSetupReport(finalReport), options.json);
 }
 
+function buildStandardReviewPrompt(context) {
+  const template = loadPromptTemplate(ROOT_DIR, "review");
+  return interpolateTemplate(template, {
+    TARGET_LABEL: context.target.label,
+    REVIEW_INPUT: context.content
+  });
+}
+
 function buildAdversarialReviewPrompt(context, focusText) {
   const template = loadPromptTemplate(ROOT_DIR, "adversarial-review");
   return interpolateTemplate(template, {
@@ -889,7 +897,7 @@ async function executeReviewRun(request, backend) {
   } else if (reviewName === "Adversarial Review") {
     prompt = buildAdversarialReviewPrompt(context, focusText);
   } else {
-    prompt = buildAdversarialReviewPrompt(context, focusText || "Standard code review: look for bugs, security issues, and quality improvements.");
+    prompt = buildStandardReviewPrompt(context);
   }
   const result = await backend.runTurn(context.repoRoot, {
     prompt,
