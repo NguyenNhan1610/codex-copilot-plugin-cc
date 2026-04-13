@@ -12,14 +12,26 @@ cwd=$(echo "$input" | jq -r '.cwd // empty')
 [ -z "$tool_name" ] && { echo '{}'; exit 0; }
 [ -z "$cwd" ] && { echo '{}'; exit 0; }
 
-# Get branch name
+# Get git root and branch name — use git root (not cwd) so cascades always
+# land in the project root, even when subagents set cwd to a subdirectory.
+git_root=$(cd "$cwd" && git rev-parse --show-toplevel 2>/dev/null || echo "")
+[ -z "$git_root" ] && { echo '{}'; exit 0; }
+
 branch=$(cd "$cwd" && git branch --show-current 2>/dev/null || echo "detached")
 [ -z "$branch" ] && branch="detached"
 
 # Sanitize branch for filename
 safe_branch=$(echo "$branch" | sed 's/[^a-zA-Z0-9._-]/-/g')
 
-cascade_dir="$cwd/.claude/cascades"
+# Detect agent context — subagents get their own subfolder under cascades/
+agent_type=$(echo "$input" | jq -r '.agent_type // .subagent_type // empty')
+if [ -n "$agent_type" ]; then
+  # Sanitize agent type for directory name
+  safe_agent=$(echo "$agent_type" | sed 's/[^a-zA-Z0-9._-]/-/g')
+  cascade_dir="$git_root/.claude/cascades/$safe_agent"
+else
+  cascade_dir="$git_root/.claude/cascades"
+fi
 cascade_file="$cascade_dir/$safe_branch.md"
 
 # Timestamp
@@ -118,13 +130,19 @@ case "$file_path" in
   */.claude/cascades/*) echo '{}'; exit 0 ;;
 esac
 
-# Make path relative to cwd
-if [[ "$file_path" == "$cwd/"* ]]; then
-  rel_path="${file_path#"$cwd/"}"
+# Make path relative to git root (not cwd) for consistent cascade entries
+if [[ "$file_path" == "$git_root/"* ]]; then
+  rel_path="${file_path#"$git_root/"}"
 elif [[ "$file_path" == /* ]]; then
-  rel_path=$(python3 -c "import os.path; print(os.path.relpath('$file_path', '$cwd'))" 2>/dev/null || echo "$file_path")
+  rel_path=$(python3 -c "import os.path; print(os.path.relpath('$file_path', '$git_root'))" 2>/dev/null || echo "$file_path")
 else
-  rel_path="$file_path"
+  # file_path is already relative — make it relative to git root via cwd
+  abs_path="$cwd/$file_path"
+  if [[ "$abs_path" == "$git_root/"* ]]; then
+    rel_path="${abs_path#"$git_root/"}"
+  else
+    rel_path="$file_path"
+  fi
 fi
 
 # Ensure cascade directory exists

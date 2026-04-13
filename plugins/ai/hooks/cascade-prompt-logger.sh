@@ -34,13 +34,24 @@ elif echo "$prompt_lower" | grep -qE '(^(now |also |add |create |implement |buil
   tag="[NEW]"
 fi
 
-# Get branch name
+# Get git root and branch name — use git root (not cwd) so cascades always
+# land in the project root, even when subagents set cwd to a subdirectory.
+git_root=$(cd "$cwd" && git rev-parse --show-toplevel 2>/dev/null || echo "")
+[ -z "$git_root" ] && { echo '{}'; exit 0; }
+
 branch=$(cd "$cwd" && git branch --show-current 2>/dev/null || echo "detached")
 [ -z "$branch" ] && branch="detached"
 
 safe_branch=$(echo "$branch" | sed 's/[^a-zA-Z0-9._-]/-/g')
 
-cascade_dir="$cwd/.claude/cascades"
+# Detect agent context — subagents get their own subfolder under cascades/
+agent_type=$(echo "$input" | jq -r '.agent_type // .subagent_type // empty')
+if [ -n "$agent_type" ]; then
+  safe_agent=$(echo "$agent_type" | sed 's/[^a-zA-Z0-9._-]/-/g')
+  cascade_dir="$git_root/.claude/cascades/$safe_agent"
+else
+  cascade_dir="$git_root/.claude/cascades"
+fi
 cascade_file="$cascade_dir/$safe_branch.md"
 
 ts=$(date '+%H:%M:%S')
