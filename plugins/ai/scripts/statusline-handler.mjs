@@ -170,7 +170,7 @@ function renderLine1(stdin, tokens, contextPct, session) {
 
   // Cost
   if (session.costUsd !== null) {
-    parts.push(`${DIM}${fmtCost(session.costUsd)}${RESET}`);
+    parts.push(`${DIM}cost: ${fmtCost(session.costUsd)}${RESET}`);
   }
 
   return parts.join(" │ ");
@@ -193,14 +193,14 @@ function renderLine2(deltas, session) {
 
   // Session duration
   if (session.durationMs !== null) {
-    parts.push(`${DIM}${fmtDuration(session.durationMs)}${RESET}`);
+    parts.push(`${DIM}time: ${fmtDuration(session.durationMs)}${RESET}`);
   }
 
   // Lines changed
   if (session.linesAdded !== null || session.linesRemoved !== null) {
     const added = session.linesAdded ?? 0;
     const removed = session.linesRemoved ?? 0;
-    parts.push(`${GREEN}+${added}${RESET} ${RED}-${removed}${RESET}`);
+    parts.push(`${DIM}lines: ${RESET}${GREEN}+${added}${RESET} ${RED}-${removed}${RESET}`);
   }
 
   return parts.length > 0 ? parts.join(" │ ") : null;
